@@ -67,7 +67,11 @@ export default function DbSchemaPage() {
               { name: "quiz_attempts", desc: "Student quiz attempts with server-evaluated score and status", fields: 10, key: "PK: id | FK: quiz_id, student_id", category: "activity", isImplemented: true },
               { name: "quiz_responses", desc: "Itemized student responses to quiz questions with awarded marks", fields: 7, key: "PK: id | FK: quiz_attempt_id, question_id", category: "activity", isImplemented: true },
               { name: "student_course_grades", desc: "Final grade ledger combining coursework, exam, letter grade, and TVET CBET outcome", fields: 11, key: "PK: id | FK: student_id, course_offering_id", category: "activity", isImplemented: true },
-              { name: "fee_records", desc: "Bookkeeping balances used for dynamic block parameters", fields: 5, key: "PK: id | FK: student_id", category: "activity", isImplemented: false }
+              { name: "fee_structures", desc: "Fee structures breakdown by program, academic year, intake, and term", fields: 9, key: "PK: id | FK: program_id, academic_year_id", category: "finance", isImplemented: true },
+              { name: "student_fee_accounts", desc: "Student fee accounts balance, billing history, and exam clearance status", fields: 7, key: "PK: id | FK: student_id", category: "finance", isImplemented: true },
+              { name: "invoices", desc: "Student invoice ledger with auto-generated invoice numbering and due dates", fields: 8, key: "PK: id | FK: student_id, fee_structure_id", category: "finance", isImplemented: true },
+              { name: "payments", desc: "M-Pesa and bank payment receipts tracking and verification workflow", fields: 9, key: "PK: id | FK: student_id, invoice_id", category: "finance", isImplemented: true },
+              { name: "system_settings", desc: "Institutional system settings, clearance thresholds, and configurations", fields: 6, key: "PK: id | Unique: setting_key", category: "security", isImplemented: true }
             ].map((table) => {
               const isSelected = selectedDbTable === table.name;
               

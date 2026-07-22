@@ -38,6 +38,11 @@ require_once __DIR__ . '/../models/AttendanceSession.php';
 require_once __DIR__ . '/../models/AttendanceRecord.php';
 require_once __DIR__ . '/../models/Announcement.php';
 require_once __DIR__ . '/../models/Notification.php';
+require_once __DIR__ . '/../models/FeeStructure.php';
+require_once __DIR__ . '/../models/StudentFeeAccount.php';
+require_once __DIR__ . '/../models/Invoice.php';
+require_once __DIR__ . '/../models/Payment.php';
+require_once __DIR__ . '/../models/SystemSetting.php';
 require_once __DIR__ . '/../services/NotificationService.php';
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../middleware/CsrfMiddleware.php';
@@ -57,6 +62,8 @@ require_once __DIR__ . '/../controllers/AttendanceController.php';
 require_once __DIR__ . '/../controllers/AttendanceReportController.php';
 require_once __DIR__ . '/../controllers/AnnouncementController.php';
 require_once __DIR__ . '/../controllers/NotificationController.php';
+require_once __DIR__ . '/../controllers/FinanceController.php';
+require_once __DIR__ . '/../controllers/AdminController.php';
 
 use App\Config\AppConfig;
 use App\Core\Response;
@@ -73,6 +80,13 @@ use App\Controllers\LearningMaterialController;
 use App\Controllers\LessonProgressController;
 use App\Controllers\AssignmentController;
 use App\Controllers\QuizController;
+use App\Controllers\GradebookController;
+use App\Controllers\AttendanceController;
+use App\Controllers\AttendanceReportController;
+use App\Controllers\AnnouncementController;
+use App\Controllers\NotificationController;
+use App\Controllers\FinanceController;
+use App\Controllers\AdminController;
 use App\Controllers\GradebookController;
 use App\Controllers\AttendanceController;
 use App\Controllers\AttendanceReportController;
@@ -210,6 +224,30 @@ $router->put('/api/v1/notifications/{id}/read', [NotificationController::class, 
 $router->put('/api/v1/notifications/{id}/unread', [NotificationController::class, 'markAsUnread']);
 $router->post('/api/v1/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 $router->delete('/api/v1/notifications/{id}', [NotificationController::class, 'deleteNotification']);
+
+// Phase 7 Finance & Fee Management Routes
+$router->get('/api/v1/finance/fee-structures', [FinanceController::class, 'getFeeStructures']);
+$router->post('/api/v1/finance/fee-structures', [FinanceController::class, 'createFeeStructure']);
+$router->put('/api/v1/finance/fee-structures/{id}', [FinanceController::class, 'updateFeeStructure']);
+$router->delete('/api/v1/finance/fee-structures/{id}', [FinanceController::class, 'deleteFeeStructure']);
+$router->get('/api/v1/finance/student-accounts', [FinanceController::class, 'getStudentAccounts']);
+$router->get('/api/v1/finance/student-accounts/{student_id}', [FinanceController::class, 'getStudentAccountById']);
+$router->get('/api/v1/finance/invoices', [FinanceController::class, 'getInvoices']);
+$router->post('/api/v1/finance/invoices', [FinanceController::class, 'createInvoice']);
+$router->get('/api/v1/finance/payments', [FinanceController::class, 'getPayments']);
+$router->post('/api/v1/finance/payments', [FinanceController::class, 'recordPayment']);
+$router->post('/api/v1/finance/payments/{id}/verify', [FinanceController::class, 'verifyPayment']);
+$router->post('/api/v1/finance/clearance/update', [FinanceController::class, 'updateClearance']);
+
+// Phase 7 Administrative Management Routes
+$router->get('/api/v1/admin/users', [AdminController::class, 'getUsers']);
+$router->post('/api/v1/admin/users', [AdminController::class, 'createUser']);
+$router->put('/api/v1/admin/users/{id}', [AdminController::class, 'updateUser']);
+$router->get('/api/v1/admin/roles', [AdminController::class, 'getRoles']);
+$router->post('/api/v1/admin/roles/assign', [AdminController::class, 'assignRoles']);
+$router->get('/api/v1/admin/settings', [AdminController::class, 'getSettings']);
+$router->put('/api/v1/admin/settings', [AdminController::class, 'updateSettings']);
+$router->get('/api/v1/admin/audit-logs', [AdminController::class, 'getAuditLogs']);
 
 // Default Root Route
 $router->get('/', function (Request $request) {

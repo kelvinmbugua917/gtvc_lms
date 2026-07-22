@@ -2,10 +2,11 @@
     Options -Indexes +FollowSymLinks
     RewriteEngine On
 
-    # CORS Headers
-    Header set Access-Control-Allow-Origin "*"
-    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    # Strict CORS & Security Headers (fallback if set by server)
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';"
 
     # Handle OPTIONS Preflight Requests
     RewriteCond %{REQUEST_METHOD} OPTIONS

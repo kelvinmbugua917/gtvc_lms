@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { 
-  Database, FolderTree, ShieldCheck, HelpCircle, Activity, FileText, Award, BookOpen, FileCheck, Calendar, Megaphone
+  Database, FolderTree, ShieldCheck, HelpCircle, Activity, FileText, Award, BookOpen, FileCheck, Calendar, Megaphone, CreditCard, Shield
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { LmsProvider, useLms } from "./context/LmsContext";
@@ -17,6 +17,8 @@ import LearningContentPage from "./pages/LearningContentPage";
 import AssessmentsPage from "./pages/AssessmentsPage";
 import AttendancePage from "./pages/AttendancePage";
 import CommunicationPage from "./pages/CommunicationPage";
+import { FinancePage } from "./pages/FinancePage";
+import { AdminPage } from "./pages/AdminPage";
 
 function LmsApp() {
   const { 
@@ -188,6 +190,30 @@ function LmsApp() {
               <span>Communication & Notices</span>
             </button>
             <button 
+              id="tab-btn-finance"
+              onClick={() => setActiveTab("finance")}
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+                activeTab === "finance" 
+                  ? "bg-teal-500 text-slate-950 font-bold shadow-md shadow-teal-500/10" 
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Finance & Fees</span>
+            </button>
+            <button 
+              id="tab-btn-admin"
+              onClick={() => setActiveTab("admin")}
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+                activeTab === "admin" 
+                  ? "bg-teal-500 text-slate-950 font-bold shadow-md shadow-teal-500/10" 
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5" />
+              <span>Administration</span>
+            </button>
+            <button 
               id="tab-btn-sim"
               onClick={() => setActiveTab("simulation")}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
@@ -229,6 +255,8 @@ function LmsApp() {
           {activeTab === "assessments" && <AssessmentsPage />}
           {activeTab === "attendance" && <AttendancePage />}
           {activeTab === "communication" && <CommunicationPage />}
+          {activeTab === "finance" && <FinancePage />}
+          {activeTab === "admin" && <AdminPage />}
           {activeTab === "simulation" && <SimulationPage />}
         </AnimatePresence>
       </main>

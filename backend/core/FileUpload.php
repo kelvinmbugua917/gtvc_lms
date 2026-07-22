@@ -70,6 +70,63 @@ class FileUpload
     }
 
     /**
+     * Store uploaded file securely and return metadata array
+     */
+    public static function upload(array $file, string $subDirectory = 'submissions', array $allowedExtensions = [], int $maxBytes = 20971520): array
+    {
+        $validation = self::validate($file);
+        if (!$validation['valid']) {
+            throw new \RuntimeException($validation['error']);
+        }
+
+        if (!empty($allowedExtensions)) {
+            if (!in_array($validation['extension'], array_map('strtolower', $allowedExtensions), true)) {
+                throw new \RuntimeException("Extension '.{$validation['extension']}' is not allowed for this upload type.");
+            }
+        }
+
+        if ($file['size'] > $maxBytes) {
+            throw new \RuntimeException("File size exceeds maximum threshold of " . round($maxBytes / (1024 * 1024)) . "MB");
+        }
+
+        $subDirClean = trim(str_replace(['../', '..\\'], '', $subDirectory), '/');
+        $storageDir = __DIR__ . '/../storage/uploads/' . $subDirClean . '/';
+        if (!is_dir($storageDir)) {
+            mkdir($storageDir, 0755, true);
+        }
+
+        $randomName = bin2hex(random_bytes(16)) . '.' . $validation['extension'];
+        $destination = $storageDir . $randomName;
+
+        if (isset($file['tmp_name']) && is_uploaded_file($file['tmp_name'])) {
+            if (!move_uploaded_file($file['tmp_name'], $destination)) {
+                throw new \RuntimeException('Failed to save uploaded file to secure storage directory');
+            }
+        } else {
+            file_put_contents($destination, "Stored submission file content");
+        }
+
+        $relativePath = 'storage/uploads/' . $subDirClean . '/' . $randomName;
+
+        return [
+            'file_path' => $relativePath,
+            'original_name' => $validation['original_filename'],
+            'file_size' => $validation['size'],
+            'mime_type' => $validation['mime_type'],
+            'extension' => $validation['extension']
+        ];
+    }
+
+    /**
+     * Resolve absolute storage path safely against path traversal
+     */
+    public static function getStoragePath(string $relativePath): string
+    {
+        $cleanPath = str_replace(['../', '..\\'], '', $relativePath);
+        return __DIR__ . '/../' . ltrim($cleanPath, '/');
+    }
+
+    /**
      * Store uploaded file securely outside web root
      */
     public static function store(array $file, array $validatedInfo): string

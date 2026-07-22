@@ -368,7 +368,23 @@ export default function ApiMapPage() {
                 { method: "POST", route: "/api/v1/attendance/sessions/{id}/records", role: "Lecturer / Admin", status: "REAL (IMPLEMENTED)", live: true },
                 { method: "GET", route: "/api/v1/attendance/me", role: "Student", status: "REAL (IMPLEMENTED)", live: true },
                 { method: "GET", route: "/api/v1/attendance/department/report", role: "HOD / Admin", status: "REAL (IMPLEMENTED)", live: true },
-                { method: "POST", route: "/api/v1/billing/update-ledger", role: "Accountant", status: "PLANNED (PHASE 6E)", live: false }
+                { method: "GET", route: "/api/v1/finance/fee-structures", role: "Finance / Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "POST", route: "/api/v1/finance/fee-structures", role: "Finance / Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "GET", route: "/api/v1/finance/student-accounts", role: "Finance / Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "GET", route: "/api/v1/finance/student-accounts/{id}", role: "Self Student / Finance", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "GET", route: "/api/v1/finance/invoices", role: "Finance / Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "POST", route: "/api/v1/finance/invoices", role: "Finance / Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "GET", route: "/api/v1/finance/payments", role: "Finance / Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "POST", route: "/api/v1/finance/payments", role: "Self Student / Finance", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "POST", route: "/api/v1/finance/payments/{id}/verify", role: "Finance / Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "POST", route: "/api/v1/finance/clearance/update", role: "Finance / Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "GET", route: "/api/v1/admin/users", role: "Super Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "POST", route: "/api/v1/admin/users", role: "Super Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "GET", route: "/api/v1/admin/roles", role: "Super Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "POST", route: "/api/v1/admin/roles/assign", role: "Super Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "GET", route: "/api/v1/admin/settings", role: "Super Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "PUT", route: "/api/v1/admin/settings", role: "Super Admin", status: "REAL (IMPLEMENTED)", live: true },
+                { method: "GET", route: "/api/v1/admin/audit-logs", role: "Super Admin", status: "REAL (IMPLEMENTED)", live: true }
               ].map((endpoint, i) => (
                 <tr 
                   key={i} 

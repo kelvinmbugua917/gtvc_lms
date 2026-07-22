@@ -170,6 +170,22 @@ export default function PhpCodeStructurePage() {
                 >
                   📄 AttendanceReportController.php
                 </button>
+                <button 
+                  onClick={() => setSelectedPhpFile("controllers/FinanceController.php")}
+                  className={`flex items-center gap-1.5 transition-all w-full text-left p-1.5 rounded cursor-pointer ${
+                    selectedPhpFile === "controllers/FinanceController.php" ? "text-teal-400 bg-teal-500/10 font-bold" : "text-slate-350 hover:text-white"
+                  }`}
+                >
+                  📄 FinanceController.php
+                </button>
+                <button 
+                  onClick={() => setSelectedPhpFile("controllers/AdminController.php")}
+                  className={`flex items-center gap-1.5 transition-all w-full text-left p-1.5 rounded cursor-pointer ${
+                    selectedPhpFile === "controllers/AdminController.php" ? "text-teal-400 bg-teal-500/10 font-bold" : "text-slate-350 hover:text-white"
+                  }`}
+                >
+                  📄 AdminController.php
+                </button>
               </div>
             </div>
 
@@ -304,6 +320,46 @@ export default function PhpCodeStructurePage() {
                   }`}
                 >
                   📄 LoginAttempt.php
+                </button>
+                <button 
+                  onClick={() => setSelectedPhpFile("models/FeeStructure.php")}
+                  className={`flex items-center gap-1.5 transition-all w-full text-left p-1.5 rounded cursor-pointer ${
+                    selectedPhpFile === "models/FeeStructure.php" ? "text-sky-400 bg-sky-500/10 font-bold" : "text-slate-350 hover:text-white"
+                  }`}
+                >
+                  📄 FeeStructure.php
+                </button>
+                <button 
+                  onClick={() => setSelectedPhpFile("models/StudentFeeAccount.php")}
+                  className={`flex items-center gap-1.5 transition-all w-full text-left p-1.5 rounded cursor-pointer ${
+                    selectedPhpFile === "models/StudentFeeAccount.php" ? "text-sky-400 bg-sky-500/10 font-bold" : "text-slate-350 hover:text-white"
+                  }`}
+                >
+                  📄 StudentFeeAccount.php
+                </button>
+                <button 
+                  onClick={() => setSelectedPhpFile("models/Invoice.php")}
+                  className={`flex items-center gap-1.5 transition-all w-full text-left p-1.5 rounded cursor-pointer ${
+                    selectedPhpFile === "models/Invoice.php" ? "text-sky-400 bg-sky-500/10 font-bold" : "text-slate-350 hover:text-white"
+                  }`}
+                >
+                  📄 Invoice.php
+                </button>
+                <button 
+                  onClick={() => setSelectedPhpFile("models/Payment.php")}
+                  className={`flex items-center gap-1.5 transition-all w-full text-left p-1.5 rounded cursor-pointer ${
+                    selectedPhpFile === "models/Payment.php" ? "text-sky-400 bg-sky-500/10 font-bold" : "text-slate-350 hover:text-white"
+                  }`}
+                >
+                  📄 Payment.php
+                </button>
+                <button 
+                  onClick={() => setSelectedPhpFile("models/SystemSetting.php")}
+                  className={`flex items-center gap-1.5 transition-all w-full text-left p-1.5 rounded cursor-pointer ${
+                    selectedPhpFile === "models/SystemSetting.php" ? "text-sky-400 bg-sky-500/10 font-bold" : "text-slate-350 hover:text-white"
+                  }`}
+                >
+                  📄 SystemSetting.php
                 </button>
               </div>
             </div>

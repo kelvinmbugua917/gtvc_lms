@@ -1,16 +1,16 @@
--- =============================================================================
--- Gilgil Technical and Vocational College (GTVC) LMS
--- Production Initial Seed Data (MySQL 8.0+ / MariaDB 10.5+)
--- =============================================================================
+/* =============================================================================
+   Gilgil Technical and Vocational College (GTVC) LMS
+   Production Initial Seed Data (MySQL 8.0+ / MariaDB 10.5+)
+   ============================================================================= */
 
 USE `gilgil_lms`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1. System Diagnostics Record
+/* 1. System Diagnostics Record */
 INSERT INTO `system_health` (`status`, `db_version`) VALUES ('OK', '1.0.0-gtvc-production');
 
--- 2. System Settings
+/* 2. System Settings */
 INSERT INTO `system_settings` (`setting_key`, `setting_value`, `category`, `description`) VALUES
 ('institution_name', 'Gilgil Technical and Vocational College', 'general', 'Official College Name'),
 ('institution_code', 'GTVC', 'general', 'Short Abbreviation'),
