@@ -1,0 +1,6 @@
+{
+  "name": "Gilgil TVC LMS",
+  "description": "A modern, responsive Learning Management System for Gilgil Technical and Vocational College, featuring interactive student lessons, vocational course tracking, assessments, and structured feedback portals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
