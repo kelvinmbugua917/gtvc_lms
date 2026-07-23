@@ -38,19 +38,19 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <a href="/admin/users" class="btn btn-secondary" style="padding: 1.25rem; text-align: center; flex-direction: column;">
+        <a href="<?= \App\Core\View::url('/admin/users') ?>" class="btn btn-secondary" style="padding: 1.25rem; text-align: center; flex-direction: column;">
             <span style="font-size: 1.5rem;">👥</span>
             <span>User & Role Management</span>
         </a>
-        <a href="/admin/academic" class="btn btn-secondary" style="padding: 1.25rem; text-align: center; flex-direction: column;">
+        <a href="<?= \App\Core\View::url('/admin/academic') ?>" class="btn btn-secondary" style="padding: 1.25rem; text-align: center; flex-direction: column;">
             <span style="font-size: 1.5rem;">🏛️</span>
             <span>Academic Hierarchy</span>
         </a>
-        <a href="/admin/settings" class="btn btn-secondary" style="padding: 1.25rem; text-align: center; flex-direction: column;">
+        <a href="<?= \App\Core\View::url('/admin/settings') ?>" class="btn btn-secondary" style="padding: 1.25rem; text-align: center; flex-direction: column;">
             <span style="font-size: 1.5rem;">⚙️</span>
             <span>System Settings</span>
         </a>
-        <a href="/admin/audit-logs" class="btn btn-secondary" style="padding: 1.25rem; text-align: center; flex-direction: column;">
+        <a href="<?= \App\Core\View::url('/admin/audit-logs') ?>" class="btn btn-secondary" style="padding: 1.25rem; text-align: center; flex-direction: column;">
             <span style="font-size: 1.5rem;">📜</span>
             <span>Security Audit Logs</span>
         </a>

@@ -51,7 +51,7 @@
             <button class="btn btn-sm btn-secondary" onclick="closeModal('submitModal')">✕</button>
         </div>
 
-        <form action="/api/v1/assignments/submissions" method="POST" enctype="multipart/form-data">
+        <form action="<?= \App\Core\View::url('/api/v1/assignments/submissions') ?>" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?= \App\Core\View::e($csrfToken) ?>">
             <input type="hidden" name="assignment_id" value="1">
 

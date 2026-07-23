@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= \App\Core\View::e($pageTitle ?? 'GTVC LMS') ?></title>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="<?= \App\Core\View::url('/assets/css/style.css') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-layout">
+        <!-- Mobile Sidebar Backdrop -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
         <!-- Sidebar Navigation -->
         <aside class="app-sidebar" id="appSidebar">
             <?php require __DIR__ . '/nav.php'; ?>
@@ -26,7 +29,7 @@
                 </div>
 
                 <div class="topbar-right">
-                    <?php if ($currentUser): ?>
+                    <?php if (!empty($currentUser)): ?>
                         <div class="user-profile-badge">
                             <div class="user-avatar">
                                 <?= strtoupper(substr($currentUser['first_name'] ?? 'U', 0, 1)) ?>
@@ -64,6 +67,6 @@
         </main>
     </div>
 
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= \App\Core\View::url('/assets/js/app.js') ?>"></script>
 </body>
 </html>

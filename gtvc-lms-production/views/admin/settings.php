@@ -3,7 +3,7 @@
         <h3 class="card-title">Global System Settings & Thresholds</h3>
     </div>
 
-    <form action="/api/v1/admin/settings" method="POST">
+    <form action="<?= \App\Core\View::url('/api/v1/admin/settings') ?>" method="POST">
         <input type="hidden" name="csrf_token" value="<?= \App\Core\View::e($csrfToken) ?>">
 
         <div class="grid grid-cols-1 lg:grid-cols-2">

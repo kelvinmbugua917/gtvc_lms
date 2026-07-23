@@ -55,6 +55,21 @@ class Department extends Model
         return self::fetchOne($sql, ['id' => $id]);
     }
 
+    public static function createDepartment(array $data): int
+    {
+        $db = self::getDb();
+        $stmt = $db->prepare("
+            INSERT INTO departments (code, name, head_of_department_id, created_at)
+            VALUES (:code, :name, :hod_id, NOW())
+        ");
+        $stmt->execute([
+            'code' => $data['code'],
+            'name' => $data['name'],
+            'hod_id' => !empty($data['hod_id']) ? (int)$data['hod_id'] : null,
+        ]);
+        return (int)$db->lastInsertId();
+    }
+
     public static function getProgramLevels(int $programId): array
     {
         $sql = "SELECT id, program_id, level_number, name, created_at

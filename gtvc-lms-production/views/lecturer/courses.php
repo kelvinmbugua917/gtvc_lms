@@ -22,7 +22,7 @@
                     <td>ICT Department</td>
                     <td>DICT 2024 Intake</td>
                     <td>42</td>
-                    <td><a href="/lecturer/gradebook" class="btn btn-sm btn-primary">Open Roster & Grades</a></td>
+                    <td><a href="<?= \App\Core\View::url('/lecturer/gradebook') ?>" class="btn btn-sm btn-primary">Open Roster & Grades</a></td>
                 </tr>
             </tbody>
         </table>

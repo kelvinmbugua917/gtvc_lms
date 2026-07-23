@@ -439,12 +439,48 @@ body {
 .alert-danger { background-color: var(--rose-light); color: #9f1239; border: 1px solid #fecdd3; }
 
 /* Responsive Adjustments */
+.sidebar-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.sidebar-close-btn:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 45;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.active {
+  display: block;
+  opacity: 1;
+}
+
 @media (max-width: 768px) {
+  .sidebar-close-btn {
+    display: block;
+  }
   .app-sidebar {
     transform: translateX(-100%);
   }
   .app-sidebar.open {
     transform: translateX(0);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   }
   .app-main {
     margin-left: 0;

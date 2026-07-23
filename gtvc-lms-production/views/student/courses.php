@@ -14,7 +14,7 @@
             </div>
             <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
                 <span style="font-size: 0.8125rem; font-weight: 600; color: #0d9488;">8 Modules Available</span>
-                <a href="/student/materials" class="btn btn-sm btn-primary">Open Unit</a>
+                <a href="<?= \App\Core\View::url('/student/materials') ?>" class="btn btn-sm btn-primary">Open Unit</a>
             </div>
         </div>
 
@@ -28,7 +28,7 @@
             </div>
             <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
                 <span style="font-size: 0.8125rem; font-weight: 600; color: #0d9488;">6 Modules Available</span>
-                <a href="/student/materials" class="btn btn-sm btn-primary">Open Unit</a>
+                <a href="<?= \App\Core\View::url('/student/materials') ?>" class="btn btn-sm btn-primary">Open Unit</a>
             </div>
         </div>
     </div>

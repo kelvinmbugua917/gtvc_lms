@@ -35,7 +35,7 @@
 <div class="card" style="margin-top: 1.5rem;">
     <div class="card-header">
         <h3 class="card-title">Recent Unverified Payment Receipts</h3>
-        <a href="/accountant/payments" class="btn btn-sm btn-primary">Open Verification Desk</a>
+        <a href="<?= \App\Core\View::url('/accountant/payments') ?>" class="btn btn-sm btn-primary">Open Verification Desk</a>
     </div>
 
     <div class="table-responsive">

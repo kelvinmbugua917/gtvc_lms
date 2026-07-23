@@ -79,29 +79,55 @@ class AdminController extends Model
     /**
      * POST /api/v1/admin/users
      */
-    public function createUser(Request $request): void
+    public function createUser(Request $request, array $params = []): void
     {
         $currentUser = AuthMiddleware::authenticate($request);
         if (!$this->isAdminAuthorized($currentUser)) {
-            Response::json(['error' => 'Forbidden: Admin access required'], 403);
+            $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+            $isJson = str_contains($accept, 'application/json') || str_contains($contentType, 'application/json');
+            if (!$isJson) {
+                \App\Core\Session::setFlash('error', 'Forbidden: Admin access required');
+                Response::redirect('/admin/users');
+            } else {
+                Response::json(['error' => 'Forbidden: Admin access required'], 403);
+            }
             return;
         }
 
         $body = $request->getBody();
-        if (empty($body['email']) || empty($body['first_name']) || empty($body['last_name']) || empty($body['password'])) {
-            Response::json(['error' => 'Missing required user fields: email, first_name, last_name, password'], 400);
+        $email = strtolower(trim((string)($_POST['email'] ?? $body['email'] ?? '')));
+        $firstName = trim((string)($_POST['first_name'] ?? $body['first_name'] ?? ''));
+        $lastName = trim((string)($_POST['last_name'] ?? $body['last_name'] ?? ''));
+        $password = (string)($_POST['password'] ?? $body['password'] ?? '');
+        $status = $_POST['status'] ?? $body['status'] ?? 'active';
+
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $isJson = str_contains($accept, 'application/json') || str_contains($contentType, 'application/json');
+
+        if (empty($email) || empty($firstName) || empty($lastName) || empty($password)) {
+            if (!$isJson) {
+                \App\Core\Session::setFlash('error', 'Missing required user fields');
+                Response::redirect('/admin/users');
+            } else {
+                Response::json(['error' => 'Missing required user fields: email, first_name, last_name, password'], 400);
+            }
             return;
         }
 
-        $email = strtolower(trim($body['email']));
         if (User::findByEmail($email)) {
-            Response::json(['error' => 'A user account with this email address already exists'], 409);
+            if (!$isJson) {
+                \App\Core\Session::setFlash('error', 'A user account with this email address already exists');
+                Response::redirect('/admin/users');
+            } else {
+                Response::json(['error' => 'A user account with this email address already exists'], 409);
+            }
             return;
         }
 
         $db = self::getDb();
-        $hash = User::hashPassword($body['password']);
-        $status = $body['status'] ?? 'active';
+        $hash = User::hashPassword($password);
 
         $stmt = $db->prepare("
             INSERT INTO `users` (`email`, `password_hash`, `first_name`, `last_name`, `status`, `created_at`)
@@ -110,15 +136,18 @@ class AdminController extends Model
         $stmt->execute([
             'email' => $email,
             'hash' => $hash,
-            'first_name' => trim($body['first_name']),
-            'last_name' => trim($body['last_name']),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'status' => $status,
         ]);
 
         $userId = (int)$db->lastInsertId();
 
         // Assign default role if provided
-        $roleId = !empty($body['role_id']) ? (int)$body['role_id'] : 2; // Default 2 = student
+        $roleInput = $_POST['role'] ?? $body['role'] ?? $body['role_id'] ?? 'student';
+        $roleMap = ['admin' => 1, 'super_admin' => 1, 'student' => 2, 'lecturer' => 3, 'trainer' => 3, 'hod' => 4, 'accountant' => 5, 'bursar' => 5];
+        $roleId = is_numeric($roleInput) ? (int)$roleInput : ($roleMap[$roleInput] ?? 2);
+
         $stmtRole = $db->prepare("INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES (:user_id, :role_id)");
         $stmtRole->execute(['user_id' => $userId, 'role_id' => $roleId]);
 
@@ -128,41 +157,64 @@ class AdminController extends Model
             'role_id' => $roleId
         ]);
 
-        Response::json(['message' => 'User account created successfully', 'id' => $userId], 201);
+        if (!$isJson) {
+            \App\Core\Session::setFlash('success', 'User account created successfully!');
+            Response::redirect('/admin/users');
+        } else {
+            Response::json(['message' => 'User account created successfully', 'id' => $userId], 201);
+        }
     }
 
     /**
-     * PUT /api/v1/admin/users/{id}
+     * PUT or POST /api/v1/admin/users/{id}
      */
-    public function updateUser(Request $request, array $params): void
+    public function updateUser(Request $request, array $params = []): void
     {
         $currentUser = AuthMiddleware::authenticate($request);
-        if (!$this->isAdminAuthorized($currentUser)) {
-            Response::json(['error' => 'Forbidden: Admin access required'], 403);
-            return;
-        }
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $isJson = str_contains($accept, 'application/json') || str_contains($contentType, 'application/json');
 
-        $userId = (int)($params['id'] ?? 0);
-        $user = User::findById($userId);
-        if (!$user) {
-            Response::json(['error' => 'User not found'], 404);
+        if (!$this->isAdminAuthorized($currentUser)) {
+            if (!$isJson) {
+                \App\Core\Session::setFlash('error', 'Forbidden: Admin access required');
+                Response::redirect('/admin/users');
+            } else {
+                Response::json(['error' => 'Forbidden: Admin access required'], 403);
+            }
             return;
         }
 
         $body = $request->getBody();
+        $userId = (int)($params['id'] ?? $body['id'] ?? $_POST['id'] ?? 1);
+        $user = User::findById($userId);
+        if (!$user) {
+            if (!$isJson) {
+                \App\Core\Session::setFlash('error', 'User not found');
+                Response::redirect('/admin/users');
+            } else {
+                Response::json(['error' => 'User not found'], 404);
+            }
+            return;
+        }
+
         $db = self::getDb();
+        $firstName = trim((string)($_POST['first_name'] ?? $body['first_name'] ?? $user['first_name']));
+        $lastName = trim((string)($_POST['last_name'] ?? $body['last_name'] ?? $user['last_name']));
+        $status = $_POST['status'] ?? $body['status'] ?? $user['status'];
+        $password = $_POST['password'] ?? $body['password'] ?? null;
 
         $sql = "UPDATE `users` SET `first_name` = :first_name, `last_name` = :last_name, `status` = :status";
         $bind = [
             'id' => $userId,
-            'first_name' => trim($body['first_name'] ?? $user['first_name']),
-            'last_name' => trim($body['last_name'] ?? $user['last_name']),
-            'status' => $body['status'] ?? $user['status']
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'status' => $status
         ];
 
-        if (!empty($body['password'])) {
+        if (!empty($password)) {
             $sql .= ", `password_hash` = :hash";
-            $bind['hash'] = User::hashPassword($body['password']);
+            $bind['hash'] = User::hashPassword($password);
         }
 
         $sql .= " WHERE `id` = :id";
@@ -171,10 +223,15 @@ class AdminController extends Model
 
         AuditLog::log((int)$currentUser['id'], 'ADMIN_USER_UPDATED', null, null, [
             'updated_user_id' => $userId,
-            'status' => $body['status'] ?? $user['status']
+            'status' => $status
         ]);
 
-        Response::json(['message' => 'User account updated successfully', 'id' => $userId]);
+        if (!$isJson) {
+            \App\Core\Session::setFlash('success', 'User account updated successfully!');
+            Response::redirect('/admin/users');
+        } else {
+            Response::json(['message' => 'User account updated successfully', 'id' => $userId]);
+        }
     }
 
     /**
@@ -252,29 +309,43 @@ class AdminController extends Model
     }
 
     /**
-     * PUT /api/v1/admin/settings
+     * PUT or POST /api/v1/admin/settings
      */
     public function updateSettings(Request $request): void
     {
         $currentUser = AuthMiddleware::authenticate($request);
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $isJson = str_contains($accept, 'application/json') || str_contains($contentType, 'application/json');
+
         if (!$this->isAdminAuthorized($currentUser)) {
-            Response::json(['error' => 'Forbidden: Admin access required'], 403);
+            if (!$isJson) {
+                \App\Core\Session::setFlash('error', 'Forbidden: Admin access required');
+                Response::redirect('/admin/settings');
+            } else {
+                Response::json(['error' => 'Forbidden: Admin access required'], 403);
+            }
             return;
         }
 
         $body = $request->getBody();
-        if (empty($body['settings']) || !is_array($body['settings'])) {
-            Response::json(['error' => 'Missing settings object/array'], 400);
-            return;
+        $settingsData = $body['settings'] ?? $_POST ?? [];
+        unset($settingsData['csrf_token']);
+
+        foreach ($settingsData as $key => $val) {
+            if (is_string($key)) {
+                SystemSetting::setKey($key, is_array($val) ? json_encode($val) : (string)$val);
+            }
         }
 
-        foreach ($body['settings'] as $key => $val) {
-            SystemSetting::setKey($key, (string)$val);
+        AuditLog::log((int)$currentUser['id'], 'ADMIN_SETTINGS_UPDATED', null, null, ['updated_keys' => array_keys($settingsData)]);
+
+        if (!$isJson) {
+            \App\Core\Session::setFlash('success', 'System settings saved successfully!');
+            Response::redirect('/admin/settings');
+        } else {
+            Response::json(['message' => 'System settings updated successfully']);
         }
-
-        AuditLog::log((int)$currentUser['id'], 'ADMIN_SETTINGS_UPDATED', null, null, ['updated_keys' => array_keys($body['settings'])]);
-
-        Response::json(['message' => 'System settings updated successfully']);
     }
 
     /**

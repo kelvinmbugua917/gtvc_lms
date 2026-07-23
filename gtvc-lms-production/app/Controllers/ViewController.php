@@ -16,7 +16,20 @@ class ViewController extends Controller
     public function home() { View::render('auth/login', ['pageTitle' => 'Gilgil TVC LMS - Login'], 'layouts/guest'); }
     public function loginView() { View::render('auth/login', ['pageTitle' => 'Gilgil TVC LMS - Login'], 'layouts/guest'); }
     public function dashboard() { 
-        $this->renderPage('student/dashboard', 'Student Portal Dashboard'); 
+        $user = \App\Core\Session::get('user');
+        $roles = array_map(fn($r) => is_array($r) ? ($r['name'] ?? '') : (string)$r, $user['roles'] ?? []);
+        
+        if (in_array('admin', $roles, true) || in_array('super_admin', $roles, true)) {
+            $this->renderPage('admin/dashboard', 'System Administration Dashboard');
+        } elseif (in_array('lecturer', $roles, true) || in_array('trainer', $roles, true)) {
+            $this->renderPage('lecturer/dashboard', 'Lecturer Portal Dashboard');
+        } elseif (in_array('hod', $roles, true)) {
+            $this->renderPage('hod/dashboard', 'Head of Department Dashboard');
+        } elseif (in_array('accountant', $roles, true) || in_array('bursar', $roles, true) || in_array('finance_officer', $roles, true)) {
+            $this->renderPage('accountant/dashboard', 'Bursar & Finance Dashboard');
+        } else {
+            $this->renderPage('student/dashboard', 'Student Portal Dashboard');
+        }
     }
     
     // Student

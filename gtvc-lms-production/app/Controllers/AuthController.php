@@ -52,7 +52,14 @@ class AuthController extends Controller
             );
         }
 
-        $user = User::findByEmail($email);
+        try {
+            $user = User::findByEmail($email);
+        } catch (\Throwable $e) {
+            Response::error(
+                "Database Connection / Query Failure: Unable to query database 'gilgil_lms'. Please verify XAMPP MySQL service is active and database/schema.sql & database/seeds.sql are imported. Error: " . $e->getMessage(),
+                500
+            );
+        }
 
         // Secure password verification (protects against user enumeration)
         if (!$user || !User::verifyPassword($password, $user['password_hash'])) {
@@ -93,6 +100,7 @@ class AuthController extends Controller
         $profile = User::getProfileDetails($user['id'], $roleNames);
 
         $sanitizedUser = User::sanitizeUser($user, $roles, $permissions, $departments, $profile);
+        Session::set('user', $sanitizedUser);
 
         AuditLog::log(
             (int)$user['id'],
@@ -107,7 +115,7 @@ class AuthController extends Controller
 
     /**
      * Terminate active user session
-     * POST /api/v1/auth/logout
+     * POST /api/v1/auth/logout or GET /logout
      */
     public function logout(Request $request): void
     {
@@ -120,7 +128,14 @@ class AuthController extends Controller
 
         Session::destroy();
 
-        Response::json(null, 'Successfully logged out');
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' || str_contains($accept, 'application/json') || str_contains($uri, '/api/')) {
+            Response::json(null, 'Successfully logged out');
+        } else {
+            Response::redirect('/login');
+        }
     }
 
     /**
@@ -142,5 +157,64 @@ class AuthController extends Controller
     {
         $token = \App\Middleware\CsrfMiddleware::getToken();
         Response::json(['csrf_token' => $token], 'CSRF token issued');
+    }
+
+    /**
+     * Change authenticated user password
+     * POST /api/v1/auth/change-password
+     */
+    public function changePassword(Request $request): void
+    {
+        $currentUser = AuthMiddleware::authenticate($request);
+        $body = $request->getBody();
+        $currentPassword = (string)($_POST['current_password'] ?? $body['current_password'] ?? '');
+        $newPassword = (string)($_POST['new_password'] ?? $body['new_password'] ?? '');
+
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $isJson = str_contains($accept, 'application/json') || str_contains($contentType, 'application/json');
+
+        if (empty($currentPassword) || empty($newPassword)) {
+            if (!$isJson) {
+                Session::setFlash('error', 'Current password and new password are required');
+                Response::redirect('/student/profile');
+            } else {
+                Response::error('Current password and new password are required', 400);
+            }
+            return;
+        }
+
+        if (strlen($newPassword) < 6) {
+            if (!$isJson) {
+                Session::setFlash('error', 'New password must be at least 6 characters long');
+                Response::redirect('/student/profile');
+            } else {
+                Response::error('New password must be at least 6 characters long', 400);
+            }
+            return;
+        }
+
+        $fullUser = User::findById($currentUser['id']);
+        if (!$fullUser || !User::verifyPassword($currentPassword, $fullUser['password_hash'])) {
+            if (!$isJson) {
+                Session::setFlash('error', 'Current password is incorrect');
+                Response::redirect('/student/profile');
+            } else {
+                Response::error('Current password is incorrect', 400);
+            }
+            return;
+        }
+
+        $newHash = User::hashPassword($newPassword);
+        User::updatePassword($currentUser['id'], $newHash);
+
+        AuditLog::log((int)$currentUser['id'], 'auth.change_password', null, null, []);
+
+        if (!$isJson) {
+            Session::setFlash('success', 'Password updated successfully!');
+            Response::redirect('/student/profile');
+        } else {
+            Response::json(null, 'Password updated successfully');
+        }
     }
 }

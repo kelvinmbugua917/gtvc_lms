@@ -174,4 +174,15 @@ class User extends Model
             'profile'     => $profile,
         ]);
     }
+
+    /**
+     * Update user password hash
+     */
+    public static function updatePassword(int|string $userId, string $newPasswordHash): void
+    {
+        $stmt = self::getDb()->prepare("
+            UPDATE `users` SET `password_hash` = :hash, `updated_at` = NOW() WHERE `id` = :id
+        ");
+        $stmt->execute(['hash' => $newPasswordHash, 'id' => $userId]);
+    }
 }

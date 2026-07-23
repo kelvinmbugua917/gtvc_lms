@@ -48,6 +48,37 @@ class AcademicController extends Controller
     }
 
     /**
+     * POST /api/v1/departments
+     */
+    public function createDepartment(Request $request): void
+    {
+        $currentUser = AuthMiddleware::authenticate($request);
+        $body = $request->getBody();
+        $code = trim((string)($_POST['code'] ?? $body['code'] ?? ''));
+        $name = trim((string)($_POST['name'] ?? $body['name'] ?? ''));
+        $hodId = (int)($_POST['hod_id'] ?? $body['hod_id'] ?? 0);
+
+        if (!empty($code) && !empty($name)) {
+            Department::createDepartment([
+                'code' => $code,
+                'name' => $name,
+                'hod_id' => $hodId,
+            ]);
+        }
+
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $isJson = str_contains($accept, 'application/json') || str_contains($contentType, 'application/json');
+
+        if (!$isJson && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            \App\Core\Session::setFlash('success', 'Academic Department saved successfully!');
+            Response::redirect('/admin/academic');
+        } else {
+            Response::json(['message' => 'Department created successfully'], 201);
+        }
+    }
+
+    /**
      * GET /api/v1/programs
      */
     public function getPrograms(Request $request): void

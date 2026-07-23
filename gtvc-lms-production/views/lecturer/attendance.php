@@ -35,7 +35,7 @@
             <button class="btn btn-sm btn-secondary" onclick="closeModal('sessionModal')">✕</button>
         </div>
 
-        <form action="/api/v1/attendance/sessions" method="POST">
+        <form action="<?= \App\Core\View::url('/api/v1/attendance/sessions') ?>" method="POST">
             <input type="hidden" name="csrf_token" value="<?= \App\Core\View::e($csrfToken) ?>">
             <div class="form-group">
                 <label class="form-label">Course Offering Unit</label>

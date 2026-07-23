@@ -37,7 +37,7 @@
     <div class="card lg:grid-cols-2" style="grid-column: span 2;">
         <div class="card-header">
             <h3 class="card-title">Current Semester Course Offerings</h3>
-            <a href="/student/courses" class="btn btn-sm btn-secondary">View All</a>
+            <a href="<?= \App\Core\View::url('/student/courses') ?>" class="btn btn-sm btn-secondary">View All</a>
         </div>
 
         <div class="table-responsive">

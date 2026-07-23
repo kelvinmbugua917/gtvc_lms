@@ -88,6 +88,18 @@ class Response
     }
 
     /**
+     * Redirect to a given URL/path
+     */
+    public static function redirect(string $path): void
+    {
+        $targetUrl = \App\Core\View::url($path);
+        if (!headers_sent()) {
+            header('Location: ' . $targetUrl);
+        }
+        exit();
+    }
+
+    /**
      * Handle uncaught exceptions gracefully as JSON
      */
     public static function handleException(\Throwable $exception): void

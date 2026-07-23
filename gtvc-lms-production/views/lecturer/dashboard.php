@@ -35,7 +35,7 @@
 <div class="card" style="margin-top: 1.5rem;">
     <div class="card-header">
         <h3 class="card-title">My Assigned Course Offerings</h3>
-        <a href="/lecturer/courses" class="btn btn-sm btn-primary">Manage Classes</a>
+        <a href="<?= \App\Core\View::url('/lecturer/courses') ?>" class="btn btn-sm btn-primary">Manage Classes</a>
     </div>
 
     <div class="table-responsive">
@@ -54,8 +54,8 @@
                     <td>ICT Dept | Diploma Term 2</td>
                     <td>42 Students</td>
                     <td>
-                        <a href="/lecturer/gradebook" class="btn btn-sm btn-secondary">Gradebook</a>
-                        <a href="/lecturer/attendance" class="btn btn-sm btn-primary">Mark Attendance</a>
+                        <a href="<?= \App\Core\View::url('/lecturer/gradebook') ?>" class="btn btn-sm btn-secondary">Gradebook</a>
+                        <a href="<?= \App\Core\View::url('/lecturer/attendance') ?>" class="btn btn-sm btn-primary">Mark Attendance</a>
                     </td>
                 </tr>
             </tbody>

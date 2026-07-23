@@ -63,26 +63,31 @@
 
 <!-- Pay Modal -->
 <div class="modal-backdrop" id="payModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100;">
-    <div class="card" style="width: 100%; max-width: 480px;">
+    <div class="card" style="width: 100%; max-width: 520px;">
         <div class="card-header">
-            <h3 class="card-title">Log M-Pesa or Bank Payment</h3>
+            <h3 class="card-title">Submit Fee Payment & Bank Receipt Slip</h3>
             <button class="btn btn-sm btn-secondary" onclick="closeModal('payModal')">✕</button>
         </div>
 
-        <form action="/api/v1/finance/payments" method="POST">
+        <form action="<?= \App\Core\View::url('/api/v1/finance/payments') ?>" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?= \App\Core\View::e($csrfToken) ?>">
 
+            <div class="alert alert-info" style="font-size: 0.8rem; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 0.6rem; border-radius: 6px; margin-bottom: 1rem;">
+                ℹ️ <strong>Notice:</strong> GTVC discourages direct M-Pesa. Please deposit fees at KCB/Equity Bank or via Bank Paybill and attach a clear photo of the bank slip or receipt below.
+            </div>
+
             <div class="form-group">
-                <label class="form-label">Payment Method</label>
+                <label class="form-label">Payment Channel</label>
                 <select name="payment_method" class="form-control" required>
-                    <option value="mpesa">M-Pesa Paybill / Till Number</option>
-                    <option value="bank_deposit">KCB / Equity Bank Receipt</option>
+                    <option value="bank_deposit" selected>KCB / Equity Bank Deposit Slip</option>
+                    <option value="bank_transfer">Bank Wire / EFT Transfer</option>
+                    <option value="mpesa">M-Pesa Official Paybill Receipt</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label class="form-label">M-Pesa / Bank Reference Code</label>
-                <input type="text" name="reference_number" class="form-control" placeholder="e.g. QK89123891" required>
+                <label class="form-label">Bank Slip / Reference Number</label>
+                <input type="text" name="reference_number" class="form-control" placeholder="e.g. KCB-89123891 or Ref No." required>
             </div>
 
             <div class="form-group">
@@ -90,9 +95,15 @@
                 <input type="number" name="amount" class="form-control" placeholder="22500" required>
             </div>
 
+            <div class="form-group">
+                <label class="form-label">Attach Photo / Scan of Payment Receipt (PNG, JPG, PDF)</label>
+                <input type="file" name="receipt_image" class="form-control" accept="image/*,.pdf" required>
+                <small class="text-muted" style="font-size: 0.75rem; color: var(--text-muted);">Please capture a clear photo showing the transaction date, amount, and reference code.</small>
+            </div>
+
             <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('payModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Submit for Verification</button>
+                <button type="submit" class="btn btn-primary">Submit Receipt for Verification</button>
             </div>
         </form>
     </div>

@@ -91,15 +91,50 @@ $router->post('/api/v1/auth/login', [App\Controllers\AuthController::class, 'log
 $router->post('/api/v1/auth/logout', [App\Controllers\AuthController::class, 'logout']);
 $router->get('/logout', [App\Controllers\AuthController::class, 'logout']);
 $router->get('/api/v1/auth/me', [App\Controllers\AuthController::class, 'me']);
+$router->post('/api/v1/auth/change-password', [App\Controllers\AuthController::class, 'changePassword']);
 
-// Core Entities API
-$router->get('/api/v1/users', [App\Controllers\UserController::class, 'index']);
-$router->get('/api/v1/academic/departments', [App\Controllers\AcademicController::class, 'departments']);
+// Admin API
+$router->get('/api/v1/admin/users', [App\Controllers\AdminController::class, 'getUsers']);
+$router->post('/api/v1/admin/users', [App\Controllers\AdminController::class, 'createUser']);
+$router->post('/api/v1/admin/users/{id}', [App\Controllers\AdminController::class, 'updateUser']);
+$router->put('/api/v1/admin/users/{id}', [App\Controllers\AdminController::class, 'updateUser']);
+$router->get('/api/v1/admin/settings', [App\Controllers\AdminController::class, 'getSettings']);
+$router->post('/api/v1/admin/settings', [App\Controllers\AdminController::class, 'updateSettings']);
+$router->put('/api/v1/admin/settings', [App\Controllers\AdminController::class, 'updateSettings']);
+$router->get('/api/v1/admin/audit-logs', [App\Controllers\AdminController::class, 'getAuditLogs']);
+
+// Academic & Departments API
+$router->get('/api/v1/academic/departments', [App\Controllers\AcademicController::class, 'getDepartments']);
+$router->get('/api/v1/departments', [App\Controllers\AcademicController::class, 'getDepartments']);
+$router->post('/api/v1/departments', [App\Controllers\AcademicController::class, 'createDepartment']);
+$router->post('/api/v1/academic/departments', [App\Controllers\AcademicController::class, 'createDepartment']);
+
+// Core Entities & Learning API
+$router->get('/api/v1/users', [App\Controllers\AdminController::class, 'getUsers']);
 $router->get('/api/v1/students', [App\Controllers\StudentController::class, 'index']);
-$router->get('/api/v1/learning/materials', [App\Controllers\LearningController::class, 'materials']);
-$router->get('/api/v1/assignments', [App\Controllers\AssessmentController::class, 'assignments']);
-$router->get('/api/v1/finance/summary', [App\Controllers\FinanceController::class, 'summary']);
-$router->get('/api/v1/admin/audit-logs', [App\Controllers\AdminController::class, 'auditLogs']);
+$router->get('/api/v1/learning/materials', [App\Controllers\LearningMaterialController::class, 'getMaterials']);
+$router->get('/api/v1/assignments', [App\Controllers\AssignmentController::class, 'getAssignments']);
+$router->post('/api/v1/assignments/submissions', [App\Controllers\AssignmentController::class, 'submitAssignment']);
+$router->post('/api/v1/assignments/{id}/submit', [App\Controllers\AssignmentController::class, 'submitAssignment']);
+$router->post('/api/v1/modules', [App\Controllers\CourseModuleController::class, 'createModule']);
+
+// Attendance API
+$router->get('/api/v1/attendance/sessions', [App\Controllers\AttendanceController::class, 'getSessions']);
+$router->post('/api/v1/attendance/sessions', [App\Controllers\AttendanceController::class, 'createSession']);
+
+// Finance API
+$router->get('/api/v1/finance/summary', [App\Controllers\FinanceController::class, 'getStudentAccounts']);
+$router->get('/api/v1/finance/fee-structures', [App\Controllers\FinanceController::class, 'getFeeStructures']);
+$router->post('/api/v1/finance/fee-structures', [App\Controllers\FinanceController::class, 'createFeeStructure']);
+$router->post('/api/v1/finance/fee-structures/{id}', [App\Controllers\FinanceController::class, 'updateFeeStructure']);
+$router->put('/api/v1/finance/fee-structures/{id}', [App\Controllers\FinanceController::class, 'updateFeeStructure']);
+$router->get('/api/v1/finance/payments', [App\Controllers\FinanceController::class, 'getPayments']);
+$router->post('/api/v1/finance/payments', [App\Controllers\FinanceController::class, 'recordPayment']);
+$router->post('/api/v1/finance/payments/{id}/verify', [App\Controllers\FinanceController::class, 'verifyPayment']);
+$router->post('/api/v1/finance/invoices/generate-batch', [App\Controllers\FinanceController::class, 'generateBatchInvoices']);
+
+// Gradebook API
+$router->post('/api/v1/gradebook/publish', [App\Controllers\GradebookController::class, 'publishGrades']);
 
 // Dispatch Request
 $request = new Request();

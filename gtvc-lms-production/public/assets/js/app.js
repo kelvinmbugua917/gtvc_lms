@@ -3,13 +3,49 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile Sidebar Toggle
+    // Mobile Sidebar Toggle & Overlay Manager
     const mobileToggle = document.getElementById('mobileToggle');
     const appSidebar = document.getElementById('appSidebar');
+    const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
-    if (mobileToggle && appSidebar) {
-        mobileToggle.addEventListener('click', () => {
-            appSidebar.classList.toggle('open');
+    function openSidebar() {
+        if (appSidebar) appSidebar.classList.add('open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+    }
+
+    function closeSidebar() {
+        if (appSidebar) appSidebar.classList.remove('open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+    }
+
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (appSidebar && appSidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+    }
+
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', closeSidebar);
+    }
+
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', closeSidebar);
+    }
+
+    // Close sidebar when clicking any nav link inside on mobile screens
+    if (appSidebar) {
+        appSidebar.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
         });
     }
 
