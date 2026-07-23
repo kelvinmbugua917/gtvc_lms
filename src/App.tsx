@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { 
-  Database, FolderTree, ShieldCheck, HelpCircle, Activity, FileText, Award, BookOpen, FileCheck, Calendar, Megaphone, CreditCard, Shield
+  Database, FolderTree, ShieldCheck, HelpCircle, Activity, FileText, Award, BookOpen, FileCheck, Calendar, Megaphone, CreditCard, Shield, Download
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { LmsProvider, useLms } from "./context/LmsContext";
@@ -58,6 +58,16 @@ function LmsApp() {
 
         {/* User Auth Badge & Navigation Tabs */}
         <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto">
+          <a
+            href="/gtvc-lms-production.zip"
+            download="gtvc-lms-production.zip"
+            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-slate-950 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all shadow-lg shadow-teal-500/20 cursor-pointer"
+            id="download-zip-btn"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download ZIP</span>
+          </a>
+
           {authUser && (
             <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />

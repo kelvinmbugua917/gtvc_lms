@@ -5,18 +5,10 @@ declare(strict_types=1);
 namespace App\Core;
 
 /**
- * Base MVC Controller with View Rendering and API helpers
+ * Base MVC Controller
  */
 abstract class Controller
 {
-    /**
-     * Render a PHP View template
-     */
-    protected function view(string $viewName, array $data = [], string $layout = 'layouts/main'): void
-    {
-        View::render($viewName, $data, $layout);
-    }
-
     /**
      * Send JSON Response helper
      */
@@ -31,14 +23,5 @@ abstract class Controller
     protected function error(string $message = 'An error occurred', int $statusCode = 400, mixed $errors = null): void
     {
         Response::error($message, $statusCode, $errors);
-    }
-
-    /**
-     * Redirect HTTP request
-     */
-    protected function redirect(string $url): void
-    {
-        header("Location: {$url}");
-        exit();
     }
 }

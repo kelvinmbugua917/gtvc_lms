@@ -6,12 +6,11 @@ namespace App\Config;
 
 /**
  * Gilgil TVC LMS Application Configuration
- * Compatible with XAMPP, InfinityFree, Hostinger, and Standard Apache/PHP 8.x
  */
 class AppConfig
 {
     /**
-     * Load environment variables from .env file if present
+     * Load environment variables from .env file if available
      */
     public static function loadEnv(string $envPath): void
     {
@@ -52,14 +51,14 @@ class AppConfig
     }
 
     /**
-     * Fetch environment variable with fallback
+     * Helper to read environment variables with fallback
      */
     public static function env(string $key, mixed $default = null): mixed
     {
-        $val = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
-        if ($val === false || $val === null || $val === '') {
-            return $default;
+        $value = getenv($key);
+        if ($value === false) {
+            return $_ENV[$key] ?? $default;
         }
-        return $val;
+        return $value;
     }
 }

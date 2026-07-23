@@ -1,5 +1,5 @@
 import React from "react";
-import { FolderTree } from "lucide-react";
+import { FolderTree, Download } from "lucide-react";
 import { motion } from "motion/react";
 import { useLms } from "../context/LmsContext";
 
@@ -19,9 +19,19 @@ export default function PhpCodeStructurePage() {
     >
       {/* Folder Tree - 4 columns */}
       <div className="lg:col-span-4 bg-slate-950 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col h-full">
-        <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2 font-sans">
-          <FolderTree className="w-4 h-4 text-teal-400" />
-          PHP MVC Directory Map
+        <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3 flex items-center justify-between font-sans">
+          <span className="flex items-center gap-2">
+            <FolderTree className="w-4 h-4 text-teal-400" />
+            PHP MVC Directory Map
+          </span>
+          <a
+            href="/gtvc-lms-production.zip"
+            download="gtvc-lms-production.zip"
+            className="flex items-center gap-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2.5 py-1 rounded-lg text-[11px] font-sans font-bold transition-all cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download ZIP
+          </a>
         </h3>
         <p className="text-xs text-slate-400 leading-relaxed mb-4">
           Fully decoupled file system optimized for standard Apache servers. Click any file to explore its secure, cPanel-compatible PHP source code.
