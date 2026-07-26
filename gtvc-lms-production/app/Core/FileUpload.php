@@ -180,6 +180,14 @@ class FileUpload
         exit;
     }
 
+    /**
+     * Stream file download alias
+     */
+    public static function streamDownload(string $relativePath, string $originalTitle = '', string $mimeType = 'application/octet-stream'): void
+    {
+        self::download($relativePath, $originalTitle, $mimeType);
+    }
+
     private static function getUploadErrorMessage(int $code): string
     {
         return match ($code) {

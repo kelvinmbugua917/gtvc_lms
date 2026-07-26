@@ -143,7 +143,7 @@ class User extends Model
             return $profile ? array_merge($profile, ['type' => 'student']) : null;
         }
 
-        if (array_intersect(['lecturer', 'admin', 'accountant', 'super_admin'], $roleNames)) {
+        if (array_intersect(['lecturer', 'trainer', 'hod', 'accountant', 'bursar', 'admin', 'super_admin', 'registrar', 'it_admin'], $roleNames)) {
             $stmt = self::getDb()->prepare("
                 SELECT * FROM `staff_profiles` WHERE `user_id` = :user_id LIMIT 1
             ");
@@ -153,6 +153,105 @@ class User extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Ensure all predefined roles exist in the database table
+     */
+    public static function ensureRolesExist(): array
+    {
+        $db = self::getDb();
+        $rolesMap = [
+            'super_admin' => 'System Administrator with unrestricted access',
+            'admin'       => 'System Administrator',
+            'hod'         => 'Head of Academic Department',
+            'lecturer'    => 'Academic Lecturer / Trainer',
+            'trainer'     => 'Technical Trainer',
+            'accountant'  => 'Finance Administrator',
+            'bursar'      => 'Institute Bursar',
+            'registrar'   => 'Academic Registrar',
+            'it_admin'    => 'ICT Systems Administrator',
+            'student'     => 'Enrolled Trainee / Student',
+        ];
+
+        try {
+            $stmt = $db->query("SELECT id, name FROM `roles`");
+            $existing = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+            $existingMap = [];
+            foreach ($existing as $r) {
+                $existingMap[strtolower($r['name'])] = (int)$r['id'];
+            }
+
+            foreach ($rolesMap as $name => $desc) {
+                if (!isset($existingMap[$name])) {
+                    $ins = $db->prepare("INSERT INTO `roles` (`name`, `description`) VALUES (:name, :desc)");
+                    $ins->execute(['name' => $name, 'desc' => $desc]);
+                    $existingMap[$name] = (int)$db->lastInsertId();
+                }
+            }
+
+            return $existingMap;
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Automatically sync users with student_profiles and staff_profiles tables
+     */
+    public static function syncAllUserProfiles(): void
+    {
+        try {
+            $db = self::getDb();
+            self::ensureRolesExist();
+
+            // 1. Sync Student Profiles
+            $studentUsers = $db->query("
+                SELECT DISTINCT u.id, u.registration_number, u.email
+                FROM `users` u
+                INNER JOIN `user_roles` ur ON u.id = ur.user_id
+                INNER JOIN `roles` r ON ur.role_id = r.id
+                WHERE r.name = 'student'
+            ")->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($studentUsers as $su) {
+                $check = $db->prepare("SELECT id FROM `student_profiles` WHERE user_id = :uid");
+                $check->execute(['uid' => $su['id']]);
+                if (!$check->fetch()) {
+                    $indexNo = !empty($su['registration_number']) ? $su['registration_number'] : ('GTVC/' . sprintf('%04d', $su['id']));
+                    $ins = $db->prepare("
+                        INSERT INTO `student_profiles` (`user_id`, `index_number`, `gender`)
+                        VALUES (:uid, :idx, 'male')
+                    ");
+                    $ins->execute(['uid' => $su['id'], 'idx' => $indexNo]);
+                }
+            }
+
+            // 2. Sync Staff Profiles
+            $staffUsers = $db->query("
+                SELECT DISTINCT u.id, u.registration_number, u.email, r.name AS role_name
+                FROM `users` u
+                INNER JOIN `user_roles` ur ON u.id = ur.user_id
+                INNER JOIN `roles` r ON ur.role_id = r.id
+                WHERE r.name IN ('lecturer', 'trainer', 'hod', 'accountant', 'bursar', 'admin', 'super_admin', 'registrar', 'it_admin')
+            ")->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($staffUsers as $st) {
+                $check = $db->prepare("SELECT id FROM `staff_profiles` WHERE user_id = :uid");
+                $check->execute(['uid' => $st['id']]);
+                if (!$check->fetch()) {
+                    $staffNo = !empty($st['registration_number']) ? $st['registration_number'] : ('STF/' . sprintf('%04d', $st['id']));
+                    $designation = strtoupper(str_replace('_', ' ', $st['role_name']));
+                    $ins = $db->prepare("
+                        INSERT INTO `staff_profiles` (`user_id`, `staff_number`, `designation`)
+                        VALUES (:uid, :stf, :des)
+                    ");
+                    $ins->execute(['uid' => $st['id'], 'stf' => $staffNo, 'des' => $designation]);
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log("Failed to sync user profiles: " . $e->getMessage());
+        }
     }
 
     /**

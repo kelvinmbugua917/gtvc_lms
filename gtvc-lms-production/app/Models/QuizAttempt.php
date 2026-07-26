@@ -18,7 +18,7 @@ class QuizAttempt extends Model
                        qa.percentage_score, qa.is_passed, qa.status,
                        q.title AS quiz_title, q.time_limit_minutes, q.passing_percentage,
                        q.course_offering_id, co.unit_id, co.class_id, co.primary_lecturer_id,
-                       p.department_id, u.full_name AS student_name, u.email AS student_email
+                       p.department_id, CONCAT(u.first_name, ' ', u.last_name) AS student_name, u.email AS student_email
                 FROM quiz_attempts qa
                 JOIN quizzes q ON q.id = qa.quiz_id
                 JOIN course_offerings co ON co.id = q.course_offering_id

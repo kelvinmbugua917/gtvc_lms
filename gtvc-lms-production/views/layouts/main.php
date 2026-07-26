@@ -50,9 +50,10 @@
             <!-- Main Page Content -->
             <div class="content-container">
                 <!-- Flash Notification Banners -->
-                <?php if (!empty($flashMessage)): ?>
+                <?php $successMsg = $flashSuccess ?? $flashMessage ?? null; ?>
+                <?php if (!empty($successMsg)): ?>
                     <div class="alert alert-success">
-                        <span>✅ <?= \App\Core\View::e($flashMessage) ?></span>
+                        <span>✅ <?= \App\Core\View::e($successMsg) ?></span>
                     </div>
                 <?php endif; ?>
 

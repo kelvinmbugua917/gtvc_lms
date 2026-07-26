@@ -8,11 +8,13 @@ use App\Core\Model;
 
 class Assignment extends Model
 {
-    /**
+/**
      * Get all assignments for a course offering
      */
     public static function getAssignmentsByOffering(int $offeringId, bool $publishedOnly = false): array
     {
+        
+
         $sql = "SELECT a.id, a.course_offering_id, a.title, a.description, a.instructions,
                        a.max_marks, a.is_published, a.release_date, a.due_date,
                        a.allow_late_submission, a.created_at, a.updated_at,
@@ -34,6 +36,8 @@ class Assignment extends Model
      */
     public static function getAssignmentById(int $id): ?array
     {
+        
+
         $sql = "SELECT a.id, a.course_offering_id, a.title, a.description, a.instructions,
                        a.max_marks, a.is_published, a.release_date, a.due_date,
                        a.allow_late_submission, a.created_at, a.updated_at,
@@ -55,6 +59,7 @@ class Assignment extends Model
      */
     public static function createAssignment(array $data): int
     {
+        
         $sql = "INSERT INTO assignments 
                 (course_offering_id, title, description, instructions, max_marks, is_published, release_date, due_date, allow_late_submission)
                 VALUES 
@@ -78,6 +83,7 @@ class Assignment extends Model
      */
     public static function updateAssignment(int $id, array $data): bool
     {
+        
         $sql = "UPDATE assignments 
                 SET title = :title,
                     description = :description,

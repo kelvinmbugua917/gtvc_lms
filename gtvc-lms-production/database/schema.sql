@@ -342,15 +342,20 @@ DROP TABLE IF EXISTS `assignments`;
 CREATE TABLE `assignments` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `course_offering_id` BIGINT NOT NULL,
-    `created_by_staff_id` BIGINT NOT NULL,
+    `created_by_staff_id` BIGINT NULL,
     `title` VARCHAR(128) NOT NULL,
     `description` TEXT NULL,
+    `instructions` TEXT NULL,
     `total_points` DECIMAL(5,2) NOT NULL DEFAULT 100.00,
-    `due_date` DATETIME NOT NULL,
+    `max_marks` INT NOT NULL DEFAULT 100,
+    `is_published` TINYINT(1) NOT NULL DEFAULT 1,
+    `release_date` DATETIME NULL,
+    `due_date` DATETIME NULL,
     `allow_late_submission` TINYINT(1) NOT NULL DEFAULT 1,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_assign_co` FOREIGN KEY (`course_offering_id`) REFERENCES `course_offerings` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_assign_staff` FOREIGN KEY (`created_by_staff_id`) REFERENCES `staff_profiles` (`id`) ON DELETE RESTRICT
+    CONSTRAINT `fk_assign_staff` FOREIGN KEY (`created_by_staff_id`) REFERENCES `staff_profiles` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `assignment_submissions` (
@@ -359,16 +364,19 @@ CREATE TABLE `assignment_submissions` (
     `student_id` BIGINT NOT NULL,
     `submission_text` TEXT NULL,
     `file_path` VARCHAR(255) NULL,
+    `original_filename` VARCHAR(255) NULL,
+    `file_size_bytes` INT NULL,
     `submitted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `grade_points` DECIMAL(5,2) NULL,
+    `is_late` TINYINT(1) NOT NULL DEFAULT 0,
+    `marks_awarded` DECIMAL(5,2) NULL,
     `feedback` TEXT NULL,
-    `graded_by_staff_id` BIGINT NULL,
+    `graded_by_user_id` BIGINT NULL,
     `graded_at` DATETIME NULL,
     `status` ENUM('submitted', 'graded', 'resubmission_requested') NOT NULL DEFAULT 'submitted',
     UNIQUE KEY `uk_assign_student` (`assignment_id`, `student_id`),
     CONSTRAINT `fk_sub_assignment` FOREIGN KEY (`assignment_id`) REFERENCES `assignments` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_sub_student` FOREIGN KEY (`student_id`) REFERENCES `student_profiles` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_sub_staff` FOREIGN KEY (`graded_by_staff_id`) REFERENCES `staff_profiles` (`id`) ON DELETE SET NULL
+    CONSTRAINT `fk_sub_student` FOREIGN KEY (`student_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_sub_staff` FOREIGN KEY (`graded_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `quizzes` (

@@ -8,17 +8,18 @@ use App\Core\Model;
 
 class AssignmentSubmission extends Model
 {
-    /**
+/**
      * Get submission by ID with security context
      */
     public static function getSubmissionById(int $id): ?array
     {
+        
         $sql = "SELECT sub.id, sub.assignment_id, sub.student_id, sub.file_path, sub.original_filename,
                        sub.file_size_bytes, sub.submission_text, sub.submitted_at, sub.is_late,
                        sub.marks_awarded, sub.feedback, sub.graded_by_user_id, sub.graded_at,
                        a.title AS assignment_title, a.max_marks, a.due_date, a.course_offering_id,
                        co.unit_id, co.class_id, co.primary_lecturer_id, p.department_id,
-                       u.full_name AS student_name, u.email AS student_email,
+                       CONCAT(u.first_name, ' ', u.last_name) AS student_name, u.email AS student_email,
                        sp.index_number
                 FROM assignment_submissions sub
                 JOIN assignments a ON a.id = sub.assignment_id
@@ -37,6 +38,7 @@ class AssignmentSubmission extends Model
      */
     public static function getStudentSubmission(int $assignmentId, int $studentId): ?array
     {
+        
         $sql = "SELECT sub.id, sub.assignment_id, sub.student_id, sub.file_path, sub.original_filename,
                        sub.file_size_bytes, sub.submission_text, sub.submitted_at, sub.is_late,
                        sub.marks_awarded, sub.feedback, sub.graded_by_user_id, sub.graded_at
@@ -54,10 +56,11 @@ class AssignmentSubmission extends Model
      */
     public static function getSubmissionsByAssignment(int $assignmentId): array
     {
+        
         $sql = "SELECT sub.id, sub.assignment_id, sub.student_id, sub.file_path, sub.original_filename,
                        sub.file_size_bytes, sub.submission_text, sub.submitted_at, sub.is_late,
                        sub.marks_awarded, sub.feedback, sub.graded_by_user_id, sub.graded_at,
-                       u.full_name AS student_name, u.email AS student_email,
+                       CONCAT(u.first_name, ' ', u.last_name) AS student_name, u.email AS student_email,
                        sp.index_number
                 FROM assignment_submissions sub
                 JOIN users u ON u.id = sub.student_id
@@ -73,6 +76,7 @@ class AssignmentSubmission extends Model
      */
     public static function saveSubmission(array $data): int
     {
+        
         // Check if existing
         $existing = self::getStudentSubmission((int)$data['assignment_id'], (int)$data['student_id']);
 
@@ -119,6 +123,7 @@ class AssignmentSubmission extends Model
      */
     public static function gradeSubmission(int $submissionId, float $marksAwarded, ?string $feedback, int $gradedByUserId): bool
     {
+        
         $sql = "UPDATE assignment_submissions
                 SET marks_awarded = :marks_awarded,
                     feedback = :feedback,

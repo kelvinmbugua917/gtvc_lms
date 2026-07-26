@@ -16,7 +16,7 @@ class StudentCourseGrade extends Model
         $sql = "SELECT scg.id, scg.student_id, scg.course_offering_id, scg.coursework_score,
                        scg.exam_score, scg.total_score, scg.letter_grade, scg.competency_outcome,
                        scg.is_published, scg.published_at, scg.updated_at,
-                       u.full_name AS student_name, u.email AS student_email,
+                       CONCAT(u.first_name, ' ', u.last_name) AS student_name, u.email AS student_email,
                        sp.index_number
                 FROM student_course_grades scg
                 JOIN users u ON u.id = scg.student_id
@@ -27,7 +27,7 @@ class StudentCourseGrade extends Model
             $sql .= " AND scg.is_published = 1";
         }
 
-        $sql .= " ORDER BY u.full_name ASC";
+        $sql .= " ORDER BY CONCAT(u.first_name, ' ', u.last_name) ASC";
 
         return self::fetchAll($sql, ['offering_id' => $offeringId]);
     }

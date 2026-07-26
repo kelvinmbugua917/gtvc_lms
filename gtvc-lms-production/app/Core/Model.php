@@ -17,7 +17,7 @@ abstract class Model
     /**
      * Get active database connection instance
      */
-    protected static function getDb(): PDO
+    public static function getDb(): PDO
     {
         if (self::$db === null) {
             self::$db = Database::getConnection();
@@ -28,7 +28,7 @@ abstract class Model
     /**
      * Fetch all matching rows
      */
-    protected static function fetchAll(string $sql, array $params = []): array
+    public static function fetchAll(string $sql, array $params = []): array
     {
         $stmt = self::getDb()->prepare($sql);
         $stmt->execute($params);
@@ -38,7 +38,7 @@ abstract class Model
     /**
      * Fetch single row or null
      */
-    protected static function fetchOne(string $sql, array $params = []): ?array
+    public static function fetchOne(string $sql, array $params = []): ?array
     {
         $stmt = self::getDb()->prepare($sql);
         $stmt->execute($params);
@@ -49,7 +49,7 @@ abstract class Model
     /**
      * Execute statement (INSERT/UPDATE/DELETE) and return affected rows or last insert ID
      */
-    protected static function execute(string $sql, array $params = []): int
+    public static function execute(string $sql, array $params = []): int
     {
         $stmt = self::getDb()->prepare($sql);
         $stmt->execute($params);

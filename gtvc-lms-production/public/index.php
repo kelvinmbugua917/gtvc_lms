@@ -108,6 +108,10 @@ $router->get('/api/v1/academic/departments', [App\Controllers\AcademicController
 $router->get('/api/v1/departments', [App\Controllers\AcademicController::class, 'getDepartments']);
 $router->post('/api/v1/departments', [App\Controllers\AcademicController::class, 'createDepartment']);
 $router->post('/api/v1/academic/departments', [App\Controllers\AcademicController::class, 'createDepartment']);
+$router->post('/api/v1/programs', [App\Controllers\AcademicController::class, 'createProgram']);
+$router->post('/api/v1/academic/programs', [App\Controllers\AcademicController::class, 'createProgram']);
+$router->post('/api/v1/classes', [App\Controllers\AcademicController::class, 'createClass']);
+$router->post('/api/v1/academic/classes', [App\Controllers\AcademicController::class, 'createClass']);
 
 // Core Entities & Learning API
 $router->get('/api/v1/users', [App\Controllers\AdminController::class, 'getUsers']);

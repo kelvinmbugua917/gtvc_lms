@@ -74,10 +74,16 @@ INSERT INTO `program_units` (`program_id`, `unit_id`, `program_level_id`, `is_co
 -- 11. Roles
 INSERT INTO `roles` (`id`, `name`, `description`) VALUES
 (1, 'super_admin', 'System Administrator with unrestricted access'),
-(2, 'admin', 'Academic Registrar / Departmental Administrator'),
-(3, 'lecturer', 'Academic Trainer / Instructor'),
-(4, 'student', 'Enrolled Trainee / Student'),
-(5, 'accountant', 'Finance Administrator');
+(2, 'admin', 'System Administrator'),
+(3, 'hod', 'Head of Academic Department'),
+(4, 'lecturer', 'Academic Lecturer / Trainer'),
+(5, 'trainer', 'Technical Trainer'),
+(6, 'accountant', 'Finance Administrator'),
+(7, 'bursar', 'Institute Bursar'),
+(8, 'registrar', 'Academic Registrar'),
+(9, 'it_admin', 'ICT Systems Administrator'),
+(10, 'student', 'Enrolled Trainee / Student')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `description` = VALUES(`description`);
 
 -- 12. Permissions
 INSERT INTO `permissions` (`id`, `name`, `module`, `description`) VALUES

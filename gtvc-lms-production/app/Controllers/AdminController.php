@@ -38,7 +38,7 @@ class AdminController extends Model
         $status = $request->getParam('status');
 
         $sql = "
-            SELECT DISTINCT u.id, u.email, u.first_name, u.last_name, u.status, u.created_at, u.last_login_at
+            SELECT DISTINCT u.id, u.email, u.first_name, u.last_name, u.is_active, u.created_at, u.last_login_at
             FROM `users` u
             LEFT JOIN `user_roles` ur ON u.id = ur.user_id
             LEFT JOIN `roles` r ON ur.role_id = r.id
@@ -57,8 +57,8 @@ class AdminController extends Model
         }
 
         if (!empty($status)) {
-            $sql .= " AND u.status = :status";
-            $params['status'] = $status;
+            $sql .= " AND u.is_active = :is_active";
+            $params['is_active'] = (in_array(strtolower((string)$status), ['active', '1', 'true'], true) || $status === 1) ? 1 : 0;
         }
 
         $sql .= " ORDER BY u.created_at DESC";
@@ -101,6 +101,7 @@ class AdminController extends Model
         $lastName = trim((string)($_POST['last_name'] ?? $body['last_name'] ?? ''));
         $password = (string)($_POST['password'] ?? $body['password'] ?? '');
         $status = $_POST['status'] ?? $body['status'] ?? 'active';
+        $isActive = (in_array(strtolower((string)$status), ['active', '1', 'true'], true) || $status === 1) ? 1 : 0;
 
         $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
         $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
@@ -126,35 +127,52 @@ class AdminController extends Model
             return;
         }
 
+        User::ensureRolesExist();
         $db = self::getDb();
+
+        $phone = trim((string)($_POST['phone'] ?? $body['phone'] ?? ''));
+        $nationalId = trim((string)($_POST['national_id'] ?? $body['national_id'] ?? ''));
+        $regNumber = trim((string)($_POST['registration_number'] ?? $body['registration_number'] ?? $_POST['staff_number'] ?? $body['staff_number'] ?? ''));
+
         $hash = User::hashPassword($password);
 
         $stmt = $db->prepare("
-            INSERT INTO `users` (`email`, `password_hash`, `first_name`, `last_name`, `status`, `created_at`)
-            VALUES (:email, :hash, :first_name, :last_name, :status, NOW())
+            INSERT INTO `users` (`email`, `password_hash`, `first_name`, `last_name`, `phone`, `national_id`, `registration_number`, `is_active`, `created_at`)
+            VALUES (:email, :hash, :first_name, :last_name, :phone, :national_id, :reg_num, :is_active, NOW())
         ");
         $stmt->execute([
             'email' => $email,
             'hash' => $hash,
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'status' => $status,
+            'phone' => !empty($phone) ? $phone : null,
+            'national_id' => !empty($nationalId) ? $nationalId : null,
+            'reg_num' => !empty($regNumber) ? $regNumber : null,
+            'is_active' => $isActive,
         ]);
 
         $userId = (int)$db->lastInsertId();
 
         // Assign default role if provided
-        $roleInput = $_POST['role'] ?? $body['role'] ?? $body['role_id'] ?? 'student';
-        $roleMap = ['admin' => 1, 'super_admin' => 1, 'student' => 2, 'lecturer' => 3, 'trainer' => 3, 'hod' => 4, 'accountant' => 5, 'bursar' => 5];
-        $roleId = is_numeric($roleInput) ? (int)$roleInput : ($roleMap[$roleInput] ?? 2);
+        $roleInput = $_POST['roles'] ?? $_POST['role'] ?? $body['roles'] ?? $body['role'] ?? $body['role_id'] ?? 'student';
+        $roleList = is_array($roleInput) ? $roleInput : [$roleInput];
+        
+        $roleNameToId = User::ensureRolesExist();
 
-        $stmtRole = $db->prepare("INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES (:user_id, :role_id)");
-        $stmtRole->execute(['user_id' => $userId, 'role_id' => $roleId]);
+        foreach ($roleList as $r) {
+            $rLower = strtolower(trim((string)$r));
+            $roleId = is_numeric($r) ? (int)$r : ($roleNameToId[$rLower] ?? null);
+            if ($roleId) {
+                $stmtRole = $db->prepare("INSERT IGNORE INTO `user_roles` (`user_id`, `role_id`) VALUES (:user_id, :role_id)");
+                $stmtRole->execute(['user_id' => $userId, 'role_id' => $roleId]);
+            }
+        }
+
+        User::syncAllUserProfiles();
 
         AuditLog::log((int)$currentUser['id'], 'ADMIN_USER_CREATED', null, null, [
             'created_user_id' => $userId,
             'email' => $email,
-            'role_id' => $roleId
         ]);
 
         if (!$isJson) {
@@ -198,18 +216,41 @@ class AdminController extends Model
             return;
         }
 
+        // Super Admin Protection: Only super_admin can modify super_admin account
+        $targetUserRoles = array_column(User::getUserRoles($userId), 'name');
+        $currentAdminRoles = array_column(User::getUserRoles($currentUser['id']), 'name');
+        $isCurrentSuperAdmin = in_array('super_admin', $currentAdminRoles, true);
+
+        if (in_array('super_admin', $targetUserRoles, true) && !$isCurrentSuperAdmin) {
+            if (!$isJson) {
+                \App\Core\Session::setFlash('error', 'Security Policy Violation: Only a Super Admin can modify a Super Admin account.');
+                Response::redirect('/admin/users');
+            } else {
+                Response::json(['error' => 'Security Policy Violation: Only a Super Admin can modify a Super Admin account.'], 403);
+            }
+            return;
+        }
+
         $db = self::getDb();
         $firstName = trim((string)($_POST['first_name'] ?? $body['first_name'] ?? $user['first_name']));
         $lastName = trim((string)($_POST['last_name'] ?? $body['last_name'] ?? $user['last_name']));
-        $status = $_POST['status'] ?? $body['status'] ?? $user['status'];
+        $phone = isset($_POST['phone']) ? trim((string)$_POST['phone']) : ($body['phone'] ?? $user['phone']);
+        $nationalId = isset($_POST['national_id']) ? trim((string)$_POST['national_id']) : ($body['national_id'] ?? $user['national_id']);
+        $regNumber = isset($_POST['registration_number']) ? trim((string)$_POST['registration_number']) : ($body['registration_number'] ?? $user['registration_number']);
+
+        $status = $_POST['status'] ?? $body['status'] ?? 'active';
+        $isActive = (in_array(strtolower((string)$status), ['active', '1', 'true'], true) || $status === 1) ? 1 : 0;
         $password = $_POST['password'] ?? $body['password'] ?? null;
 
-        $sql = "UPDATE `users` SET `first_name` = :first_name, `last_name` = :last_name, `status` = :status";
+        $sql = "UPDATE `users` SET `first_name` = :first_name, `last_name` = :last_name, `phone` = :phone, `national_id` = :national_id, `registration_number` = :reg_num, `is_active` = :is_active";
         $bind = [
             'id' => $userId,
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'status' => $status
+            'phone' => !empty($phone) ? $phone : null,
+            'national_id' => !empty($nationalId) ? $nationalId : null,
+            'reg_num' => !empty($regNumber) ? $regNumber : null,
+            'is_active' => $isActive
         ];
 
         if (!empty($password)) {
@@ -221,9 +262,41 @@ class AdminController extends Model
         $stmt = $db->prepare($sql);
         $stmt->execute($bind);
 
+        // Update assigned user roles if roles submitted
+        $rolesSubmitted = $_POST['roles'] ?? $_POST['role'] ?? $body['roles'] ?? $body['role'] ?? null;
+        if ($rolesSubmitted !== null) {
+            $roleList = is_array($rolesSubmitted) ? $rolesSubmitted : [$rolesSubmitted];
+            $roleNameToId = User::ensureRolesExist();
+
+            // Check if non-super_admin is trying to grant super_admin
+            if (in_array('super_admin', array_map('strtolower', $roleList), true) && !$isCurrentSuperAdmin) {
+                if (!$isJson) {
+                    \App\Core\Session::setFlash('error', 'Security Policy Violation: Only a Super Admin can grant Super Admin privileges.');
+                    Response::redirect('/admin/users');
+                } else {
+                    Response::json(['error' => 'Security Policy Violation: Only a Super Admin can grant Super Admin privileges.'], 403);
+                }
+                return;
+            }
+
+            $stmtDel = $db->prepare("DELETE FROM `user_roles` WHERE `user_id` = :user_id");
+            $stmtDel->execute(['user_id' => $userId]);
+
+            foreach ($roleList as $r) {
+                $rLower = strtolower(trim((string)$r));
+                $roleId = is_numeric($r) ? (int)$r : ($roleNameToId[$rLower] ?? null);
+                if ($roleId) {
+                    $stmtRole = $db->prepare("INSERT IGNORE INTO `user_roles` (`user_id`, `role_id`) VALUES (:user_id, :role_id)");
+                    $stmtRole->execute(['user_id' => $userId, 'role_id' => $roleId]);
+                }
+            }
+        }
+
+        User::syncAllUserProfiles();
+
         AuditLog::log((int)$currentUser['id'], 'ADMIN_USER_UPDATED', null, null, [
             'updated_user_id' => $userId,
-            'status' => $status
+            'is_active' => $isActive
         ]);
 
         if (!$isJson) {

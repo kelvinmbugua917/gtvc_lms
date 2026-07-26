@@ -47,4 +47,25 @@ class AuditLog extends Model
             return false;
         }
     }
+
+    /**
+     * Retrieve recent security audit log events
+     */
+    public static function getRecentLogs(int $limit = 100): array
+    {
+        try {
+            $stmt = self::getDb()->prepare("
+                SELECT a.*, u.email, u.first_name, u.last_name 
+                FROM `audit_logs` a
+                LEFT JOIN `users` u ON a.user_id = u.id
+                ORDER BY a.created_at DESC
+                LIMIT :limit
+            ");
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
 }

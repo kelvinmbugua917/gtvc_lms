@@ -51,4 +51,20 @@ class CsrfMiddleware
             Response::error('CSRF validation failed: Invalid or missing CSRF token', 403);
         }
     }
+
+    /**
+     * Validate CSRF token
+     */
+    public static function validate(?string $token = null): bool
+    {
+        Session::start();
+        $sessionToken = Session::get('_csrf_token');
+        if (!$sessionToken) {
+            return false;
+        }
+        if ($token === null) {
+            $token = $_POST['csrf_token'] ?? $_POST['_csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+        }
+        return $token !== null && hash_equals($sessionToken, (string)$token);
+    }
 }
