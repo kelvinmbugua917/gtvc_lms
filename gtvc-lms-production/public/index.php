@@ -120,6 +120,9 @@ $router->get('/api/v1/learning/materials', [App\Controllers\LearningMaterialCont
 $router->get('/api/v1/assignments', [App\Controllers\AssignmentController::class, 'getAssignments']);
 $router->post('/api/v1/assignments/submissions', [App\Controllers\AssignmentController::class, 'submitAssignment']);
 $router->post('/api/v1/assignments/{id}/submit', [App\Controllers\AssignmentController::class, 'submitAssignment']);
+$router->get('/api/v1/assignments/{id}/submissions', [App\Controllers\AssignmentController::class, 'getSubmissions']);
+$router->post('/api/v1/assignments/submissions/{id}/grade', [App\Controllers\AssignmentController::class, 'gradeSubmission']);
+$router->post('/api/v1/assignments/grade', [App\Controllers\AssignmentController::class, 'gradeSubmission']);
 $router->post('/api/v1/modules', [App\Controllers\CourseModuleController::class, 'createModule']);
 
 // Attendance API

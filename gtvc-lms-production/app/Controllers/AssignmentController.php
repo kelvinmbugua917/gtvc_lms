@@ -159,14 +159,12 @@ class AssignmentController
 
         $assignment = Assignment::getAssignmentById($id);
         if (!$assignment) {
-            // If specific ID not found in database, fetch first available published assignment or create stub check
-            $assignment = [
-                'id' => $id,
-                'course_offering_id' => 1,
-                'is_published' => 1,
-                'due_date' => null,
-                'allow_late_submission' => 1
-            ];
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+                \App\Core\Session::setFlash('error', 'Assignment not found.');
+                \App\Core\Response::redirect('/student/assignments');
+            } else {
+                \App\Core\Response::error('Assignment not found.', 404);
+            }
         }
 
         $studentProfileId = $currentUser['profile']['id'] ?? 0;
@@ -235,9 +233,14 @@ class AssignmentController
             'is_late' => $isLate
         ]);
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
-            \App\Core\Session::setFlash('success', 'Assignment solution submitted successfully for evaluation!');
-            Response::redirect('/student/assignments');
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $isJson = (str_contains($accept, 'application/json') || str_contains($contentType, 'application/json')) && !isset($_POST['redirect']);
+
+        if (!$isJson) {
+            \App\Core\Session::setFlash('success', 'Assignment solution submitted successfully! Status updated to WAITING FOR LECTURER REVIEW.');
+            $redirectTo = $_POST['redirect'] ?? '/student/assignments';
+            Response::redirect($redirectTo);
         } else {
             Response::json([
                 'message' => $isLate ? "Assignment submitted late successfully" : "Assignment submitted successfully",
@@ -302,35 +305,64 @@ class AssignmentController
     /**
      * Grade an assignment submission
      */
-    public function gradeSubmission(Request $request, int $submissionId): void
+    public function gradeSubmission(Request $request, array|int $params = 0): void
     {
         $currentUser = AuthMiddleware::authenticate($request);
+        $body = $request->getBody();
+        $submissionId = is_int($params) ? $params : (int)($params['id'] ?? $body['submission_id'] ?? $_POST['submission_id'] ?? 1);
+
         $submission = AssignmentSubmission::getSubmissionById($submissionId);
         if (!$submission) {
-            Response::error("Submission not found", 404);
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+                \App\Core\Session::setFlash('error', 'Submission not found.');
+                Response::redirect('/lecturer/gradebook');
+            } else {
+                Response::error("Submission not found", 404);
+            }
         }
 
         $this->verifyLecturerOrAdminCourseAccess($currentUser, (int)$submission['course_offering_id'], 'assignment.grade');
 
-        $body = $request->getBody();
-        if (!isset($body['marks_awarded'])) {
-            Response::error("Validation Error: 'marks_awarded' is required", 422);
+        $marksInput = $body['marks_awarded'] ?? $_POST['marks_awarded'] ?? null;
+        if ($marksInput === null) {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+                \App\Core\Session::setFlash('error', "Validation Error: 'marks_awarded' is required");
+                Response::redirect('/lecturer/gradebook');
+            } else {
+                Response::error("Validation Error: 'marks_awarded' is required", 422);
+            }
         }
 
-        $marks = (float)$body['marks_awarded'];
+        $marks = (float)$marksInput;
         $maxMarks = (float)$submission['max_marks'];
         if ($marks < 0 || $marks > $maxMarks) {
-            Response::error("Validation Error: 'marks_awarded' must be between 0 and {$maxMarks}", 422);
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+                \App\Core\Session::setFlash('error', "Validation Error: Marks must be between 0 and {$maxMarks}");
+                Response::redirect('/lecturer/gradebook');
+            } else {
+                Response::error("Validation Error: 'marks_awarded' must be between 0 and {$maxMarks}", 422);
+            }
         }
 
-        AssignmentSubmission::gradeSubmission($submissionId, $marks, $body['feedback'] ?? null, (int)$currentUser['id']);
+        $feedback = $body['feedback'] ?? $_POST['feedback'] ?? null;
+        AssignmentSubmission::gradeSubmission($submissionId, $marks, $feedback, (int)$currentUser['id']);
 
         AuditLog::log($currentUser['id'], 'submission.grade', 'assignment_submissions', $submissionId, [
             'marks_awarded' => $marks,
             'max_marks' => $maxMarks
         ]);
 
-        Response::json(['message' => "Submission graded successfully"]);
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $isJson = (str_contains($accept, 'application/json') || str_contains($contentType, 'application/json')) && !isset($_POST['redirect']);
+
+        if (!$isJson) {
+            \App\Core\Session::setFlash('success', "Submission graded successfully! Marks ({$marks}/{$maxMarks}) and feedback recorded for student.");
+            $redirectTo = $_POST['redirect'] ?? '/lecturer/gradebook';
+            Response::redirect($redirectTo);
+        } else {
+            Response::json(['message' => "Submission graded successfully"]);
+        }
     }
 
     /**

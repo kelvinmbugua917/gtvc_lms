@@ -1,8 +1,26 @@
+<?php if ($flashSuccess = \App\Core\Session::getFlash('success')): ?>
+    <div class="alert alert-success" style="background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 500;">
+        ✓ <?= \App\Core\View::e($flashSuccess) ?>
+    </div>
+<?php endif; ?>
+
+<?php if ($flashError = \App\Core\Session::getFlash('error')): ?>
+    <div class="alert alert-danger" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 500;">
+        ✕ <?= \App\Core\View::e($flashError) ?>
+    </div>
+<?php endif; ?>
+
+<?php
+$totalBilled = (float)($account['total_billed'] ?? 16420.00);
+$totalPaid = (float)($account['total_paid'] ?? 10000.00);
+$currentBalance = isset($account['current_balance']) ? (float)$account['current_balance'] : ($totalBilled - $totalPaid);
+?>
+
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
     <div class="stat-card">
         <div>
             <div class="stat-label">Term Fee Billed</div>
-            <div class="stat-value">KES 22,500</div>
+            <div class="stat-value">KES <?= number_format($totalBilled, 2) ?></div>
         </div>
         <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">📑</div>
     </div>
@@ -10,7 +28,7 @@
     <div class="stat-card">
         <div>
             <div class="stat-label">Total Paid</div>
-            <div class="stat-value" style="color: #047857;">KES 22,500</div>
+            <div class="stat-value" style="color: #047857;">KES <?= number_format($totalPaid, 2) ?></div>
         </div>
         <div class="stat-icon" style="background: #d1fae5; color: #047857;">💳</div>
     </div>
@@ -18,7 +36,7 @@
     <div class="stat-card">
         <div>
             <div class="stat-label">Outstanding Balance</div>
-            <div class="stat-value">KES 0.00</div>
+            <div class="stat-value">KES <?= number_format($currentBalance, 2) ?></div>
         </div>
         <div class="stat-icon" style="background: #ccfbf1; color: #0f766e;">🛡️</div>
     </div>
@@ -42,20 +60,40 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td><strong>QK89123891</strong></td>
-                    <td>M-Pesa Paybill (522522)</td>
-                    <td>KES 15,000.00</td>
-                    <td>2026-07-02 11:20</td>
-                    <td><span class="badge badge-success">VERIFIED & POSTED</span></td>
-                </tr>
-                <tr>
-                    <td><strong>QK77182910</strong></td>
-                    <td>KCB Bank Deposit</td>
-                    <td>KES 7,500.00</td>
-                    <td>2026-06-15 14:10</td>
-                    <td><span class="badge badge-success">VERIFIED & POSTED</span></td>
-                </tr>
+                <?php if (!empty($payments)): ?>
+                    <?php foreach ($payments as $p): ?>
+                        <tr>
+                            <td><strong><?= \App\Core\View::e($p['transaction_reference']) ?></strong></td>
+                            <td><?= \App\Core\View::e(ucwords(str_replace('_', ' ', $p['payment_method'] ?? 'Bank Deposit'))) ?></td>
+                            <td>KES <?= number_format((float)$p['amount'], 2) ?></td>
+                            <td><?= \App\Core\View::e(date('Y-m-d H:i', strtotime($p['payment_date']))) ?></td>
+                            <td>
+                                <?php if (($p['status'] ?? 'pending') === 'verified'): ?>
+                                    <span class="badge badge-success">✓ VERIFIED & POSTED</span>
+                                <?php elseif (($p['status'] ?? 'pending') === 'rejected'): ?>
+                                    <span class="badge badge-danger">✕ REJECTED</span>
+                                <?php else: ?>
+                                    <span class="badge" style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">⏳ PENDING ACCOUNTANT APPROVAL</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td><strong>QK89123891</strong></td>
+                        <td>M-Pesa Paybill (522522)</td>
+                        <td>KES 15,000.00</td>
+                        <td>2026-07-02 11:20</td>
+                        <td><span class="badge badge-success">✓ VERIFIED & POSTED</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>QK77182910</strong></td>
+                        <td>KCB Bank Deposit</td>
+                        <td>KES 7,500.00</td>
+                        <td>2026-06-15 14:10</td>
+                        <td><span class="badge badge-success">✓ VERIFIED & POSTED</span></td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -71,6 +109,7 @@
 
         <form action="<?= \App\Core\View::url('/api/v1/finance/payments') ?>" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?= \App\Core\View::e($csrfToken) ?>">
+            <input type="hidden" name="redirect" value="/student/fees">
 
             <div class="alert alert-info" style="font-size: 0.8rem; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 0.6rem; border-radius: 6px; margin-bottom: 1rem;">
                 ℹ️ <strong>Notice:</strong> GTVC discourages direct M-Pesa. Please deposit fees at KCB/Equity Bank or via Bank Paybill and attach a clear photo of the bank slip or receipt below.
@@ -97,7 +136,7 @@
 
             <div class="form-group">
                 <label class="form-label">Attach Photo / Scan of Payment Receipt (PNG, JPG, PDF)</label>
-                <input type="file" name="receipt_image" class="form-control" accept="image/*,.pdf" required>
+                <input type="file" name="receipt_image" class="form-control" accept="image/*,.pdf">
                 <small class="text-muted" style="font-size: 0.75rem; color: var(--text-muted);">Please capture a clear photo showing the transaction date, amount, and reference code.</small>
             </div>
 

@@ -42,10 +42,25 @@ class Response
     }
 
     /**
-     * Send a successful JSON response
+     * Send a successful JSON response with flexible parameters
      */
-    public static function json(mixed $data = null, string $message = 'Success', int $statusCode = 200, array $meta = []): void
+    public static function json(mixed $data = null, string|int $arg2 = 'Success', string|int $arg3 = 200, array $meta = []): void
     {
+        $message = 'Success';
+        $statusCode = 200;
+
+        if (is_int($arg2) || (is_string($arg2) && ctype_digit($arg2))) {
+            $statusCode = (int)$arg2;
+            if (is_string($arg3) && !ctype_digit($arg3)) {
+                $message = $arg3;
+            }
+        } elseif (is_string($arg2)) {
+            $message = $arg2;
+            if (is_int($arg3) || (is_string($arg3) && ctype_digit($arg3))) {
+                $statusCode = (int)$arg3;
+            }
+        }
+
         http_response_code($statusCode);
         self::setSecurityHeaders();
 

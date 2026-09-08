@@ -15,7 +15,7 @@ class Payment extends Model
         $sql = "
             SELECT 
                 p.*,
-                sp.admission_number,
+                sp.index_number AS admission_number,
                 u.first_name,
                 u.last_name,
                 u.email,
@@ -47,7 +47,7 @@ class Payment extends Model
         }
 
         if (!empty($filters['search'])) {
-            $sql .= " AND (p.transaction_reference LIKE :search OR sp.admission_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
+            $sql .= " AND (p.transaction_reference LIKE :search OR sp.index_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
             $params['search'] = '%' . $filters['search'] . '%';
         }
 
@@ -64,7 +64,7 @@ class Payment extends Model
         $stmt = $db->prepare("
             SELECT 
                 p.*,
-                sp.admission_number,
+                sp.index_number AS admission_number,
                 u.first_name,
                 u.last_name,
                 u.email,

@@ -147,4 +147,10 @@ INSERT INTO `invoices` (`id`, `invoice_number`, `student_id`, `fee_structure_id`
 INSERT INTO `payments` (`id`, `transaction_reference`, `student_id`, `invoice_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
 (1, 'RKT9823412', 1, 1, 10000.00, 'mpesa', '2025-05-10 10:30:00', 'verified');
 
+
+
+-- 21. Assignments
+INSERT INTO `assignments` (`id`, `course_offering_id`, `created_by_staff_id`, `title`, `description`, `instructions`, `total_points`, `max_marks`, `is_published`, `due_date`, `allow_late_submission`) VALUES
+(1, 1, 1, 'Use Case Diagram & SRS Document', 'Create a use case diagram and SRS document for a simple system.', 'Submit as PDF.', 100.00, 100, 1, '2026-07-28 23:59:00', 1);
+
 SET FOREIGN_KEY_CHECKS = 1;

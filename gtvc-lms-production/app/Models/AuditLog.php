@@ -18,13 +18,20 @@ class AuditLog extends Model
     public static function log(
         ?int $userId,
         string $action,
-        ?string $ipAddress = null,
-        ?string $userAgent = null,
+        ?string $entityType = null,
+        $entityId = null,
         array $details = []
     ): bool {
         try {
-            $ipAddress = $ipAddress ?? $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-            $userAgent = $userAgent ?? $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+            $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+
+            if ($entityType !== null) {
+                $details['entity_type'] = $entityType;
+            }
+            if ($entityId !== null) {
+                $details['entity_id'] = $entityId;
+            }
 
             // Filter out sensitive data from details before writing
             unset($details['password'], $details['password_hash'], $details['token']);

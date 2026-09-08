@@ -15,7 +15,7 @@ class StudentFeeAccount extends Model
         $stmt = $db->prepare("
             SELECT 
                 sfa.*,
-                sp.admission_number,
+                sp.index_number AS admission_number,
                 u.first_name,
                 u.last_name,
                 u.email,
@@ -25,7 +25,8 @@ class StudentFeeAccount extends Model
             FROM `student_fee_accounts` sfa
             JOIN `student_profiles` sp ON sfa.student_id = sp.id
             JOIN `users` u ON sp.user_id = u.id
-            LEFT JOIN `programs` p ON sp.program_id = p.id
+            LEFT JOIN `student_enrollments` se ON se.student_id = sp.id AND se.status = 'active'
+            LEFT JOIN `programs` p ON se.program_id = p.id
             LEFT JOIN `departments` d ON p.department_id = d.id
             WHERE sfa.student_id = :student_id
         ");
@@ -66,7 +67,7 @@ class StudentFeeAccount extends Model
         $sql = "
             SELECT 
                 sfa.*,
-                sp.admission_number,
+                sp.index_number AS admission_number,
                 u.first_name,
                 u.last_name,
                 u.email,
@@ -76,7 +77,8 @@ class StudentFeeAccount extends Model
             FROM `student_fee_accounts` sfa
             JOIN `student_profiles` sp ON sfa.student_id = sp.id
             JOIN `users` u ON sp.user_id = u.id
-            LEFT JOIN `programs` p ON sp.program_id = p.id
+            LEFT JOIN `student_enrollments` se ON se.student_id = sp.id AND se.status = 'active'
+            LEFT JOIN `programs` p ON se.program_id = p.id
             LEFT JOIN `departments` d ON p.department_id = d.id
             WHERE 1=1
         ";
@@ -88,7 +90,7 @@ class StudentFeeAccount extends Model
         }
 
         if (!empty($filters['search'])) {
-            $sql .= " AND (sp.admission_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search OR u.email LIKE :search)";
+            $sql .= " AND (sp.index_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search OR u.email LIKE :search)";
             $params['search'] = '%' . $filters['search'] . '%';
         }
 

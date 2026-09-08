@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\FileUpload;
 use App\Middleware\AuthMiddleware;
 use App\Models\FeeStructure;
 use App\Models\StudentFeeAccount;
@@ -333,8 +334,12 @@ class FinanceController
             'receipt_path' => $receiptPath
         ]);
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
-            \App\Core\Session::setFlash('success', 'Bank receipt submitted successfully! Accounts department will verify and update your balance.');
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $isJson = (str_contains($accept, 'application/json') || str_contains($contentType, 'application/json')) && !isset($_POST['redirect']);
+
+        if (!$isJson) {
+            \App\Core\Session::setFlash('success', 'Bank receipt submitted successfully! Payment slip marked as PENDING ACCOUNTANT APPROVAL.');
             Response::redirect('/student/fees');
         } else {
             Response::json(['message' => 'Payment recorded successfully', 'id' => $paymentId, 'status' => $status], 201);

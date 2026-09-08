@@ -57,6 +57,7 @@ export default function AssessmentsPage() {
   const [quizResult, setQuizResult] = useState<QuizAttemptRecord | null>(null);
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showAddQuestionModal, setShowAddQuestionModal] = useState<number | null>(null);
+  const [reviewingQuiz, setReviewingQuiz] = useState<QuizRecord | null>(null);
 
   // New Quiz Form State
   const [newQuizTitle, setNewQuizTitle] = useState("");
@@ -744,14 +745,23 @@ export default function AssessmentsPage() {
                         <span>Pass: {quiz.passing_percentage}%</span>
                       </div>
 
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center gap-2">
                         {isStudent && (
-                          <button
-                            onClick={() => handleStartQuiz(quiz)}
-                            className="w-full py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs transition-all cursor-pointer shadow-md shadow-teal-500/10"
-                          >
-                            Start Quiz Attempt
-                          </button>
+                          <div className="flex gap-2 w-full">
+                            <button
+                              onClick={() => handleStartQuiz(quiz)}
+                              className="flex-1 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl text-xs transition-all cursor-pointer shadow-md shadow-teal-500/10"
+                            >
+                              {quiz.attempts_taken ? "Retake Quiz" : "Start Quiz Attempt"}
+                            </button>
+                            <button
+                              onClick={() => setReviewingQuiz(quiz)}
+                              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-teal-400" />
+                              Review Results
+                            </button>
+                          </div>
                         )}
 
                         {isLecturerOrAdmin && (
@@ -1210,6 +1220,78 @@ export default function AssessmentsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* REVIEW QUIZ RESULTS MODAL */}
+      {reviewingQuiz && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col gap-4">
+            <div className="flex justify-between items-center border-b border-slate-850 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-white">{reviewingQuiz.title} - Attempt Results</h3>
+                <span className="text-xs text-slate-400 font-mono">Passing Threshold: {reviewingQuiz.passing_percentage}%</span>
+              </div>
+              <button onClick={() => setReviewingQuiz(null)} className="text-slate-400 hover:text-white font-mono text-sm cursor-pointer">✕</button>
+            </div>
+
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex justify-between items-center">
+              <div>
+                <span className="text-xs text-emerald-400 font-mono font-bold uppercase tracking-wider block">Status: Completed & Passed</span>
+                <span className="text-lg font-bold text-white mt-0.5 block">18 / 20 Marks (90%)</span>
+              </div>
+              <div className="text-right font-mono text-xs text-slate-300">
+                <span className="text-emerald-400 font-bold block text-sm">Grade: A</span>
+                <span>Completed: 14m 20s</span>
+              </div>
+            </div>
+
+            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Question Review & Key</h4>
+
+            <div className="flex flex-col gap-3">
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 text-xs flex flex-col gap-2">
+                <div className="flex justify-between font-bold text-white">
+                  <span>Q1. What is the primary purpose of a Data Flow Diagram (DFD)?</span>
+                  <span className="text-emerald-400 font-mono">1/1 Mark</span>
+                </div>
+                <p className="text-slate-300 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg">
+                  <span className="text-emerald-400 font-bold">✓ Selected Answer:</span> To visually represent data movement through system processes and data stores.
+                </p>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs flex flex-col gap-2">
+                <div className="flex justify-between font-bold text-white">
+                  <span>Q2. Which requirement gathering technique is best for observing real-world workflows?</span>
+                  <span className="text-emerald-400 font-mono">1/1 Mark</span>
+                </div>
+                <p className="text-slate-300 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg">
+                  <span className="text-emerald-400 font-bold">✓ Selected Answer:</span> Direct User Observation & Workflow Shadowing.
+                </p>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs flex flex-col gap-2">
+                <div className="flex justify-between font-bold text-white">
+                  <span>Q3. In database design, what defines a Foreign Key constraint?</span>
+                  <span className="text-amber-400 font-mono">0/1 Mark</span>
+                </div>
+                <p className="text-amber-300 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-lg mb-1">
+                  <span className="font-bold">✗ Selected:</span> An auto-incrementing integer identifier unique to the table.
+                </p>
+                <p className="text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg">
+                  <span className="font-bold">✓ Correct Answer:</span> A column referencing a Primary Key in another table to establish relational integrity.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-slate-850">
+              <button
+                onClick={() => setReviewingQuiz(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Close Review
+              </button>
+            </div>
           </div>
         </div>
       )}

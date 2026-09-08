@@ -147,7 +147,49 @@ class AssignmentSubmission extends Model
     public static function deleteSubmission(int $submissionId): bool
     {
         $sql = "DELETE FROM assignment_submissions WHERE id = :id";
-        self::execute($sql, ['id' => $submissionId]);
-        return true;
+        return self::execute($sql, ['id' => $submissionId]) > 0;
+    }
+
+    /**
+     * Get all published assignments along with student's submission status
+     */
+    public static function getStudentAssignmentsWithSubmissions(int $studentUserId): array
+    {
+        $sql = "SELECT a.id AS assignment_id, a.title, a.description, a.instructions, a.max_marks, a.due_date,
+                       un.code AS unit_code, un.title AS unit_title,
+                       sub.id AS submission_id, sub.file_path, sub.original_filename, sub.submission_text,
+                       sub.submitted_at, sub.is_late, sub.marks_awarded, sub.feedback, sub.graded_at
+                FROM assignments a
+                JOIN course_offerings co ON co.id = a.course_offering_id
+                JOIN units un ON un.id = co.unit_id
+                LEFT JOIN assignment_submissions sub ON sub.assignment_id = a.id AND sub.student_id = :student_id
+                WHERE a.is_published = 1
+                ORDER BY a.due_date ASC, a.created_at DESC";
+
+        return self::fetchAll($sql, ['student_id' => $studentUserId]);
+    }
+
+    /**
+     * Get all submissions for lecturer review & grading
+     */
+    public static function getAllSubmissionsForLecturer(int $lecturerUserId = 0): array
+    {
+        $sql = "SELECT sub.id AS submission_id, sub.assignment_id, sub.student_id, sub.file_path,
+                       sub.original_filename, sub.submission_text, sub.submitted_at, sub.is_late,
+                       sub.marks_awarded, sub.feedback, sub.graded_at,
+                       a.title AS assignment_title, a.max_marks,
+                       un.code AS unit_code, un.title AS unit_title,
+                       CONCAT(u.first_name, ' ', u.last_name) AS student_name,
+                       u.email AS student_email,
+                       sp.index_number AS registration_number
+                FROM assignment_submissions sub
+                JOIN assignments a ON a.id = sub.assignment_id
+                JOIN course_offerings co ON co.id = a.course_offering_id
+                JOIN units un ON un.id = co.unit_id
+                JOIN users u ON u.id = sub.student_id
+                LEFT JOIN student_profiles sp ON sp.user_id = u.id
+                ORDER BY sub.submitted_at DESC";
+
+        return self::fetchAll($sql);
     }
 }

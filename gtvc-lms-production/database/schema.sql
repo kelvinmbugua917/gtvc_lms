@@ -461,26 +461,38 @@ DROP TABLE IF EXISTS `attendance_sessions`;
 CREATE TABLE `attendance_sessions` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
     `course_offering_id` BIGINT NOT NULL,
+    `class_id` BIGINT NULL,
     `lecturer_id` BIGINT NOT NULL,
     `session_date` DATE NOT NULL,
     `start_time` TIME NOT NULL,
     `end_time` TIME NOT NULL,
-    `session_type` ENUM('theory', 'practical_workshop', 'lab', 'exam') NOT NULL DEFAULT 'theory',
+    `session_type` VARCHAR(64) NOT NULL DEFAULT 'theory',
+    `topic` VARCHAR(255) NULL,
     `topic_covered` VARCHAR(255) NULL,
+    `notes` TEXT NULL,
+    `facility_equipment` VARCHAR(255) NULL,
+    `practical_hours` DECIMAL(4,2) DEFAULT 0.00,
+    `theory_hours` DECIMAL(4,2) DEFAULT 0.00,
+    `status` VARCHAR(32) DEFAULT 'completed',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_attses_co` FOREIGN KEY (`course_offering_id`) REFERENCES `course_offerings` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_attses_staff` FOREIGN KEY (`lecturer_id`) REFERENCES `staff_profiles` (`id`) ON DELETE RESTRICT
+    `updated_at` DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_attses_co` FOREIGN KEY (`course_offering_id`) REFERENCES `course_offerings` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `attendance_records` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `session_id` BIGINT NOT NULL,
+    `session_id` BIGINT NULL,
+    `attendance_session_id` BIGINT NULL,
     `student_id` BIGINT NOT NULL,
+    `enrollment_id` BIGINT NULL,
     `status` ENUM('present', 'absent', 'excused', 'late') NOT NULL DEFAULT 'present',
+    `arrival_time` TIME NULL,
+    `excuse_reason` TEXT NULL,
+    `lecturer_notes` TEXT NULL,
+    `practical_competency_obs` TEXT NULL,
     `remarks` VARCHAR(255) NULL,
-    UNIQUE KEY `uk_attendance_session_student` (`session_id`, `student_id`),
-    CONSTRAINT `fk_attr_session` FOREIGN KEY (`session_id`) REFERENCES `attendance_sessions` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_attr_student` FOREIGN KEY (`student_id`) REFERENCES `student_profiles` (`id`) ON DELETE CASCADE
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NULL ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------

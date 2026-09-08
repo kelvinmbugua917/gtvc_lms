@@ -22,7 +22,7 @@ class Invoice extends Model
         $sql = "
             SELECT 
                 i.*,
-                sp.admission_number,
+                sp.index_number AS admission_number,
                 u.first_name,
                 u.last_name,
                 u.email,
@@ -32,7 +32,8 @@ class Invoice extends Model
             JOIN `student_profiles` sp ON i.student_id = sp.id
             JOIN `users` u ON sp.user_id = u.id
             LEFT JOIN `fee_structures` fs ON i.fee_structure_id = fs.id
-            LEFT JOIN `programs` p ON sp.program_id = p.id
+            LEFT JOIN `student_enrollments` se ON se.student_id = sp.id AND se.status = 'active'
+            LEFT JOIN `programs` p ON se.program_id = p.id
             WHERE 1=1
         ";
         $params = [];
@@ -48,7 +49,7 @@ class Invoice extends Model
         }
 
         if (!empty($filters['search'])) {
-            $sql .= " AND (i.invoice_number LIKE :search OR sp.admission_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
+            $sql .= " AND (i.invoice_number LIKE :search OR sp.index_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
             $params['search'] = '%' . $filters['search'] . '%';
         }
 
@@ -65,7 +66,7 @@ class Invoice extends Model
         $stmt = $db->prepare("
             SELECT 
                 i.*,
-                sp.admission_number,
+                sp.index_number AS admission_number,
                 u.first_name,
                 u.last_name,
                 u.email,
@@ -76,7 +77,8 @@ class Invoice extends Model
             JOIN `student_profiles` sp ON i.student_id = sp.id
             JOIN `users` u ON sp.user_id = u.id
             LEFT JOIN `fee_structures` fs ON i.fee_structure_id = fs.id
-            LEFT JOIN `programs` p ON sp.program_id = p.id
+            LEFT JOIN `student_enrollments` se ON se.student_id = sp.id AND se.status = 'active'
+            LEFT JOIN `programs` p ON se.program_id = p.id
             WHERE i.id = :id
         ");
         $stmt->execute(['id' => $id]);

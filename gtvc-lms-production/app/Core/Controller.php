@@ -12,9 +12,9 @@ abstract class Controller
     /**
      * Send JSON Response helper
      */
-    protected function json(mixed $data = null, string $message = 'Success', int $statusCode = 200, array $meta = []): void
+    protected function json(mixed $data = null, string|int $arg2 = 'Success', string|int $arg3 = 200, array $meta = []): void
     {
-        Response::json($data, $message, $statusCode, $meta);
+        Response::json($data, $arg2, $arg3, $meta);
     }
 
     /**

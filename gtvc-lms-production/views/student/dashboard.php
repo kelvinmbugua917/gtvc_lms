@@ -2,7 +2,7 @@
     <div class="stat-card">
         <div>
             <div class="stat-label">Enrolled Units</div>
-            <div class="stat-value">5</div>
+            <div class="stat-value"><?= (int)($enrolledUnits ?? 5) ?></div>
         </div>
         <div class="stat-icon" style="background: #ccfbf1; color: #0f766e;">📚</div>
     </div>
@@ -10,7 +10,7 @@
     <div class="stat-card">
         <div>
             <div class="stat-label">Pending Assignments</div>
-            <div class="stat-value">2</div>
+            <div class="stat-value"><?= (int)($pendingAssignments ?? 2) ?></div>
         </div>
         <div class="stat-icon" style="background: #fef3c7; color: #b45309;">📝</div>
     </div>
@@ -18,7 +18,7 @@
     <div class="stat-card">
         <div>
             <div class="stat-label">Attendance Rate</div>
-            <div class="stat-value">92%</div>
+            <div class="stat-value"><?= \App\Core\View::e($attendanceRate ?? '92%') ?></div>
         </div>
         <div class="stat-icon" style="background: #d1fae5; color: #047857;">⏱️</div>
     </div>
@@ -26,7 +26,7 @@
     <div class="stat-card">
         <div>
             <div class="stat-label">Exam Clearance</div>
-            <div class="stat-value" style="font-size: 1.125rem; color: #047857;">CLEARED</div>
+            <div class="stat-value" style="font-size: 1.125rem; color: #047857; text-transform: uppercase;"><?= \App\Core\View::e($clearanceStatus ?? 'CLEARED') ?></div>
         </div>
         <div class="stat-icon" style="background: #e0f2fe; color: #0369a1;">🛡️</div>
     </div>
@@ -51,48 +51,53 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>
-                            <strong>ICT 201: System Analysis & Design</strong><br>
-                            <small class="text-muted">Diploma in ICT - Term 2</small>
-                        </td>
-                        <td>Eng. John Koech</td>
-                        <td>
-                            <div style="width: 100px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                                <div style="width: 75%; height: 100%; background: #0d9488;"></div>
-                            </div>
-                            <small>75%</small>
-                        </td>
-                        <td><span class="badge badge-success">ACTIVE</span></td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <strong>EE 104: Electrical Workshop Practice</strong><br>
-                            <small class="text-muted">Craft Certificate in Electrical Eng</small>
-                        </td>
-                        <td>Tr. Mary Mwangi</td>
-                        <td>
-                            <div style="width: 100px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                                <div style="width: 88%; height: 100%; background: #0d9488;"></div>
-                            </div>
-                            <small>88%</small>
-                        </td>
-                        <td><span class="badge badge-success">ACTIVE</span></td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <strong>ME 302: Hydraulics & Pneumatics</strong><br>
-                            <small class="text-muted">Diploma in Mechanical Eng</small>
-                        </td>
-                        <td>Dr. David Ochieng</td>
-                        <td>
-                            <div style="width: 100px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                                <div style="width: 60%; height: 100%; background: #0d9488;"></div>
-                            </div>
-                            <small>60%</small>
-                        </td>
-                        <td><span class="badge badge-success">ACTIVE</span></td>
-                    </tr>
+                    <?php if (!empty($courses)): ?>
+                        <?php foreach ($courses as $c): ?>
+                            <tr>
+                                <td>
+                                    <strong><?= \App\Core\View::e(($c['unit_code'] ?? '') . ': ' . ($c['unit_title'] ?? 'Unit')) ?></strong><br>
+                                    <small class="text-muted"><?= \App\Core\View::e($c['program_name'] ?? 'Diploma Program') ?></small>
+                                </td>
+                                <td><?= \App\Core\View::e($c['lecturer_name'] ?? 'Eng. John Koech') ?></td>
+                                <td>
+                                    <div style="width: 100px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                                        <div style="width: <?= (int)($c['progress_pct'] ?? 75) ?>%; height: 100%; background: #0d9488;"></div>
+                                    </div>
+                                    <small><?= (int)($c['progress_pct'] ?? 75) ?>%</small>
+                                </td>
+                                <td><span class="badge badge-success">ACTIVE</span></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td>
+                                <strong>ICT 201: System Analysis & Design</strong><br>
+                                <small class="text-muted">Diploma in ICT - Term 2</small>
+                            </td>
+                            <td>Eng. John Koech</td>
+                            <td>
+                                <div style="width: 100px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 75%; height: 100%; background: #0d9488;"></div>
+                                </div>
+                                <small>75%</small>
+                            </td>
+                            <td><span class="badge badge-success">ACTIVE</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>EE 104: Electrical Workshop Practice</strong><br>
+                                <small class="text-muted">Craft Certificate in Electrical Eng</small>
+                            </td>
+                            <td>Tr. Mary Mwangi</td>
+                            <td>
+                                <div style="width: 100px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 88%; height: 100%; background: #0d9488;"></div>
+                                </div>
+                                <small>88%</small>
+                            </td>
+                            <td><span class="badge badge-success">ACTIVE</span></td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -105,17 +110,27 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div style="padding-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0;">
-                <span class="badge badge-warning" style="margin-bottom: 0.375rem;">ACADEMIC NOTICE</span>
-                <h4 style="font-size: 0.875rem; font-weight: 700;">Term 2 Mid-Semester CAT Timetable</h4>
-                <p style="font-size: 0.775rem; color: #64748b; margin-top: 0.25rem;">CAT exams will commence on Monday, July 27th. Ensure exam cards are printed.</p>
-            </div>
+            <?php if (!empty($bulletins)): ?>
+                <?php foreach ($bulletins as $b): ?>
+                    <div style="padding-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0;">
+                        <span class="badge badge-warning" style="margin-bottom: 0.375rem;"><?= \App\Core\View::e(strtoupper($b['type'] ?? 'NOTICE')) ?></span>
+                        <h4 style="font-size: 0.875rem; font-weight: 700;"><?= \App\Core\View::e($b['title']) ?></h4>
+                        <p style="font-size: 0.775rem; color: #64748b; margin-top: 0.25rem;"><?= \App\Core\View::e($b['content']) ?></p>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div style="padding-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0;">
+                    <span class="badge badge-warning" style="margin-bottom: 0.375rem;">ACADEMIC NOTICE</span>
+                    <h4 style="font-size: 0.875rem; font-weight: 700;">Term 2 Mid-Semester CAT Timetable</h4>
+                    <p style="font-size: 0.775rem; color: #64748b; margin-top: 0.25rem;">CAT exams will commence on Monday, July 27th. Ensure exam cards are printed.</p>
+                </div>
 
-            <div style="padding-bottom: 0.75rem;">
-                <span class="badge badge-info" style="margin-bottom: 0.375rem;">FINANCE DEPT</span>
-                <h4 style="font-size: 0.875rem; font-weight: 700;">Fee Payment Clearance Deadline</h4>
-                <p style="font-size: 0.775rem; color: #64748b; margin-top: 0.25rem;">All students must have a zero balance or approved fee payment plan by Friday.</p>
-            </div>
+                <div style="padding-bottom: 0.75rem;">
+                    <span class="badge badge-info" style="margin-bottom: 0.375rem;">FINANCE DEPT</span>
+                    <h4 style="font-size: 0.875rem; font-weight: 700;">Fee Payment Clearance Deadline</h4>
+                    <p style="font-size: 0.775rem; color: #64748b; margin-top: 0.25rem;">All students must have a zero balance or approved fee payment plan by Friday.</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

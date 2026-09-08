@@ -2,7 +2,7 @@
     <div class="stat-card">
         <div>
             <div class="stat-label">Total System Users</div>
-            <div class="stat-value">385</div>
+            <div class="stat-value"><?= (int)($totalUsers ?? 385) ?></div>
         </div>
         <div class="stat-icon" style="background: #ccfbf1; color: #0f766e;">👥</div>
     </div>
@@ -10,7 +10,7 @@
     <div class="stat-card">
         <div>
             <div class="stat-label">Active Academic Units</div>
-            <div class="stat-value">28</div>
+            <div class="stat-value"><?= (int)($activeUnits ?? 28) ?></div>
         </div>
         <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">🏛️</div>
     </div>
@@ -25,8 +25,8 @@
 
     <div class="stat-card">
         <div>
-            <div class="stat-label">Security Traces</div>
-            <div class="stat-value">0 Alerts</div>
+            <div class="stat-label">Security Audit Traces</div>
+            <div class="stat-value"><?= (int)($auditLogsCount ?? 0) ?> Records</div>
         </div>
         <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;">📜</div>
     </div>
