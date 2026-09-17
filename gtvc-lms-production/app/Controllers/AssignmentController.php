@@ -155,13 +155,19 @@ class AssignmentController
     {
         $currentUser = AuthMiddleware::authenticate($request);
         $body = $request->getBody();
-        $id = (int)($params['id'] ?? $body['assignment_id'] ?? $_POST['assignment_id'] ?? 1);
+        $id = (int)($params['id'] ?? $body['assignment_id'] ?? $_POST['assignment_id'] ?? $_GET['assignment_id'] ?? 1);
+
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        $hasRedirect = !empty($_POST['redirect']);
+        $isJson = !$hasRedirect && (str_contains($accept, 'application/json') || str_contains($contentType, 'application/json'));
 
         $assignment = Assignment::getAssignmentById($id);
         if (!$assignment) {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+            if (!$isJson) {
                 \App\Core\Session::setFlash('error', 'Assignment not found.');
-                \App\Core\Response::redirect('/student/assignments');
+                \App\Core\Response::redirect($_POST['redirect'] ?? '/student/assignments');
+                return;
             } else {
                 \App\Core\Response::error('Assignment not found.', 404);
             }
@@ -174,10 +180,11 @@ class AssignmentController
         if (!empty($assignment['due_date'])) {
             $dueDateTs = strtotime($assignment['due_date']);
             if (time() > $dueDateTs) {
-                if ($assignment['allow_late_submission'] == 0) {
-                    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+                if (isset($assignment['allow_late_submission']) && (int)$assignment['allow_late_submission'] === 0) {
+                    if (!$isJson) {
                         \App\Core\Session::setFlash('error', 'Submission Rejected: Deadline passed and late submissions are disabled.');
-                        Response::redirect('/student/assignments');
+                        Response::redirect($_POST['redirect'] ?? '/student/assignments');
+                        return;
                     } else {
                         Response::error("Submission Rejected: Deadline passed and late submissions are disabled", 422);
                     }
@@ -203,9 +210,10 @@ class AssignmentController
                 $originalFilename = $uploadResult['original_name'];
                 $fileSizeBytes = $uploadResult['file_size'];
             } catch (\Exception $e) {
-                if ($_SERVER['REQUEST_METHOD'] === 'POST' && !str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+                if (!$isJson) {
                     \App\Core\Session::setFlash('error', 'File Upload Failed: ' . $e->getMessage());
-                    Response::redirect('/student/assignments');
+                    Response::redirect($_POST['redirect'] ?? '/student/assignments');
+                    return;
                 } else {
                     Response::error("File Upload Failed: " . $e->getMessage(), 422);
                 }
@@ -232,10 +240,6 @@ class AssignmentController
             'assignment_id' => $id,
             'is_late' => $isLate
         ]);
-
-        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
-        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
-        $isJson = (str_contains($accept, 'application/json') || str_contains($contentType, 'application/json')) && !isset($_POST['redirect']);
 
         if (!$isJson) {
             \App\Core\Session::setFlash('success', 'Assignment solution submitted successfully! Status updated to WAITING FOR LECTURER REVIEW.');

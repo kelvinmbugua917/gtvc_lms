@@ -250,4 +250,38 @@ class AttendanceRecord extends Model
             'students' => $studentsWithRecords
         ];
     }
+
+    public static function getStudentAttendanceLog(int $studentProfileId, int $limit = 0, int $offset = 0): array
+    {
+        $sql = "SELECT r.id, r.status, r.arrival_time, r.excuse_reason,
+                       s.session_date, s.start_time, s.end_time, s.session_type, COALESCE(s.topic, s.topic_covered, 'Attendance Session') AS topic,
+                       u.title AS unit_title, u.code AS unit_code,
+                       lec.first_name AS lecturer_first_name, lec.last_name AS lecturer_last_name
+                FROM attendance_records r
+                JOIN attendance_sessions s ON s.id = r.attendance_session_id
+                JOIN course_offerings co ON co.id = s.course_offering_id
+                JOIN units u ON u.id = co.unit_id
+                LEFT JOIN users lec ON lec.id = s.lecturer_id
+                WHERE r.student_id = :student_id
+                ORDER BY s.session_date DESC, s.start_time DESC";
+
+        if ($limit > 0) {
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
+
+        return self::fetchAll($sql, ['student_id' => $studentProfileId]);
+    }
+
+    public static function countStudentAttendanceLog(int $studentProfileId): int
+    {
+        $sql = "SELECT COUNT(*)
+                FROM attendance_records r
+                JOIN attendance_sessions s ON s.id = r.attendance_session_id
+                WHERE r.student_id = :student_id";
+
+        $db = self::getDb();
+        $stmt = $db->prepare($sql);
+        $stmt->execute(['student_id' => $studentProfileId]);
+        return (int)$stmt->fetchColumn();
+    }
 }

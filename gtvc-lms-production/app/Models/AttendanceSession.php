@@ -11,7 +11,7 @@ class AttendanceSession extends Model
     /**
      * Get attendance sessions with optional filtering
      */
-    public static function getSessions(array $filters = []): array
+    public static function getSessions(array $filters = [], int $limit = 0, int $offset = 0): array
     {
         $sql = "SELECT s.id, s.course_offering_id, COALESCE(s.class_id, co.class_id) AS class_id, s.lecturer_id, s.session_date,
                        s.start_time, s.end_time, s.session_type, COALESCE(s.topic, s.topic_covered, 'Attendance Session') AS topic, s.notes,
@@ -76,10 +76,66 @@ class AttendanceSession extends Model
 
         $sql .= " ORDER BY s.session_date DESC, s.start_time DESC";
 
+        if ($limit > 0) {
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
+
         try {
             return self::fetchAll($sql, $params);
         } catch (\PDOException $e) {
             return [];
+        }
+    }
+
+    public static function countSessions(array $filters = []): int
+    {
+        $sql = "SELECT COUNT(*)
+                FROM attendance_sessions s
+                JOIN course_offerings co ON co.id = s.course_offering_id
+                JOIN units u ON u.id = co.unit_id
+                JOIN classes c ON c.id = COALESCE(s.class_id, co.class_id)
+                JOIN programs p ON p.id = c.program_id
+                JOIN departments d ON d.id = p.department_id";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['course_offering_id'])) {
+            $conditions[] = "s.course_offering_id = :course_offering_id";
+            $params['course_offering_id'] = (int)$filters['course_offering_id'];
+        }
+
+        if (!empty($filters['lecturer_id'])) {
+            $conditions[] = "s.lecturer_id = :lecturer_id";
+            $params['lecturer_id'] = (int)$filters['lecturer_id'];
+        }
+
+        if (!empty($filters['class_id'])) {
+            $conditions[] = "co.class_id = :class_id";
+            $params['class_id'] = (int)$filters['class_id'];
+        }
+
+        if (!empty($filters['department_id'])) {
+            $conditions[] = "p.department_id = :department_id";
+            $params['department_id'] = (int)$filters['department_id'];
+        }
+
+        if (!empty($filters['session_type'])) {
+            $conditions[] = "s.session_type = :session_type";
+            $params['session_type'] = $filters['session_type'];
+        }
+
+        if (!empty($conditions)) {
+            $sql .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        try {
+            $db = self::getDb();
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return (int)$stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            return 0;
         }
     }
 

@@ -97,6 +97,7 @@ $currentBalance = isset($account['current_balance']) ? (float)$account['current_
             </tbody>
         </table>
     </div>
+    <?= isset($paginator) ? $paginator->render() : '' ?>
 </div>
 
 <!-- Pay Modal -->

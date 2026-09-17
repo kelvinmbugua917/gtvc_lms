@@ -94,7 +94,9 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7),
 (2, 2), (2, 3), (2, 7),
 (3, 4), (3, 5), (3, 7),
-(5, 6);
+(5, 6),
+(8, 2), (8, 3), (8, 7),
+(9, 1), (9, 2);
 
 -- 14. Initial Users
 -- Default Passwords hashed with Argon2id / bcrypt placeholder: "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi" (password: "password")

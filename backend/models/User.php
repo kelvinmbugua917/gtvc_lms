@@ -143,7 +143,7 @@ class User extends Model
             return $profile ? array_merge($profile, ['type' => 'student']) : null;
         }
 
-        if (array_intersect(['lecturer', 'admin', 'accountant', 'super_admin'], $roleNames)) {
+        if (array_intersect(['lecturer', 'trainer', 'hod', 'accountant', 'bursar', 'admin', 'super_admin', 'registrar', 'it_admin'], $roleNames)) {
             $stmt = self::getDb()->prepare("
                 SELECT * FROM `staff_profiles` WHERE `user_id` = :user_id LIMIT 1
             ");

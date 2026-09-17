@@ -9,7 +9,7 @@ use PDO;
 
 class FeeStructure extends Model
 {
-    public static function getAll(array $filters = []): array
+    public static function getAll(array $filters = [], int $limit = 0, int $offset = 0): array
     {
         $db = self::getDb();
         $sql = "
@@ -43,11 +43,58 @@ class FeeStructure extends Model
             $params['intake_id'] = (int)$filters['intake_id'];
         }
 
+        if (!empty($filters['search'])) {
+            $sql .= " AND (p.name LIKE :search OR p.code LIKE :search OR fs.description LIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
         $sql .= " ORDER BY fs.created_at DESC";
+
+        if ($limit > 0) {
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
 
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function count(array $filters = []): int
+    {
+        $db = self::getDb();
+        $sql = "
+            SELECT COUNT(*)
+            FROM `fee_structures` fs
+            JOIN `programs` p ON fs.program_id = p.id
+            JOIN `academic_years` ay ON fs.academic_year_id = ay.id
+            JOIN `intakes` i ON fs.intake_id = i.id
+            WHERE 1=1
+        ";
+        $params = [];
+
+        if (!empty($filters['program_id'])) {
+            $sql .= " AND fs.program_id = :program_id";
+            $params['program_id'] = (int)$filters['program_id'];
+        }
+
+        if (!empty($filters['academic_year_id'])) {
+            $sql .= " AND fs.academic_year_id = :academic_year_id";
+            $params['academic_year_id'] = (int)$filters['academic_year_id'];
+        }
+
+        if (!empty($filters['intake_id'])) {
+            $sql .= " AND fs.intake_id = :intake_id";
+            $params['intake_id'] = (int)$filters['intake_id'];
+        }
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (p.name LIKE :search OR p.code LIKE :search OR fs.description LIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
     }
 
     public static function getById(int $id): ?array

@@ -59,6 +59,7 @@
             </tbody>
         </table>
     </div>
+    <?= isset($paginator) ? $paginator->render() : '' ?>
 </div>
 
 <div class="card">

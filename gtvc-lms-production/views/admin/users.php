@@ -1,23 +1,57 @@
 <?php
+use App\Core\Paginator;
+
 \App\Models\User::syncAllUserProfiles();
 $db = \App\Core\Model::getDb();
 $selectedRole = $_GET['role'] ?? 'all';
+$search = trim($_GET['search'] ?? '');
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = max(5, min(100, (int)($_GET['per_page'] ?? 15)));
+
+$whereClauses = ["1=1"];
+$params = [];
+
+if ($selectedRole !== 'all' && !empty($selectedRole)) {
+    $whereClauses[] = "r.name = :role";
+    $params['role'] = $selectedRole;
+}
+
+if (!empty($search)) {
+    $whereClauses[] = "(u.email LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search OR u.registration_number LIKE :search OR u.phone LIKE :search OR u.national_id LIKE :search)";
+    $params['search'] = '%' . $search . '%';
+}
+
+$whereSql = implode(' AND ', $whereClauses);
+
+$countSql = "
+    SELECT COUNT(DISTINCT u.id)
+    FROM `users` u
+    LEFT JOIN `user_roles` ur ON u.id = ur.user_id
+    LEFT JOIN `roles` r ON ur.role_id = r.id
+    WHERE {$whereSql}
+";
+$countStmt = $db->prepare($countSql);
+$countStmt->execute($params);
+$totalUsersCount = (int)$countStmt->fetchColumn();
+
+$paginator = new Paginator($totalUsersCount, $perPage, $page);
 
 $sql = "
     SELECT DISTINCT u.id, u.email, u.first_name, u.last_name, u.phone, u.national_id, u.registration_number, u.is_active, u.created_at
     FROM `users` u
     LEFT JOIN `user_roles` ur ON u.id = ur.user_id
     LEFT JOIN `roles` r ON ur.role_id = r.id
+    WHERE {$whereSql}
+    ORDER BY u.id ASC
+    LIMIT :limit OFFSET :offset
 ";
-$params = [];
-if ($selectedRole !== 'all' && !empty($selectedRole)) {
-    $sql .= " WHERE r.name = :role";
-    $params['role'] = $selectedRole;
-}
-$sql .= " ORDER BY u.id ASC";
-
 $stmt = $db->prepare($sql);
-$stmt->execute($params);
+foreach ($params as $k => $v) {
+    $stmt->bindValue(':' . $k, $v);
+}
+$stmt->bindValue(':limit', $paginator->getLimit(), \PDO::PARAM_INT);
+$stmt->bindValue(':offset', $paginator->getOffset(), \PDO::PARAM_INT);
+$stmt->execute();
 $usersList = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
 foreach ($usersList as &$u) {
@@ -32,22 +66,32 @@ unset($u);
             <h3 class="card-title" style="margin: 0;">System User Accounts & Role Management</h3>
             <p style="font-size: 0.85rem; color: #64748b; margin: 0.25rem 0 0 0;">Manage users, assign security roles, update phone/IDs, and filter accounts.</p>
         </div>
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <form method="GET" action="" style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
-                <label style="font-size: 0.875rem; font-weight: 500; color: #334155;">Filter by Role:</label>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <form method="GET" action="" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; flex-wrap: wrap;">
+                <input type="text" name="search" value="<?= \App\Core\View::e($search) ?>" placeholder="Search name, email, reg no..." class="form-control" style="width: 200px; padding: 0.375rem 0.75rem; font-size: 0.875rem;">
                 <select name="role" onchange="this.form.submit()" class="form-control" style="width: auto; padding: 0.375rem 0.75rem; font-size: 0.875rem;">
-                    <option value="all" <?= $selectedRole === 'all' ? 'selected' : '' ?>>All Roles (All Users)</option>
+                    <option value="all" <?= $selectedRole === 'all' ? 'selected' : '' ?>>All Roles</option>
                     <option value="student" <?= $selectedRole === 'student' ? 'selected' : '' ?>>Students</option>
                     <option value="lecturer" <?= $selectedRole === 'lecturer' ? 'selected' : '' ?>>Lecturers</option>
                     <option value="trainer" <?= $selectedRole === 'trainer' ? 'selected' : '' ?>>Trainers</option>
-                    <option value="hod" <?= $selectedRole === 'hod' ? 'selected' : '' ?>>Heads of Department (HOD)</option>
+                    <option value="hod" <?= $selectedRole === 'hod' ? 'selected' : '' ?>>Heads of Dept</option>
                     <option value="accountant" <?= $selectedRole === 'accountant' ? 'selected' : '' ?>>Accountants</option>
                     <option value="bursar" <?= $selectedRole === 'bursar' ? 'selected' : '' ?>>Bursar</option>
-                    <option value="registrar" <?= $selectedRole === 'registrar' ? 'selected' : '' ?>>Academic Registrar</option>
+                    <option value="registrar" <?= $selectedRole === 'registrar' ? 'selected' : '' ?>>Registrar</option>
                     <option value="it_admin" <?= $selectedRole === 'it_admin' ? 'selected' : '' ?>>IT Admin</option>
-                    <option value="admin" <?= $selectedRole === 'admin' ? 'selected' : '' ?>>System Administrators</option>
+                    <option value="admin" <?= $selectedRole === 'admin' ? 'selected' : '' ?>>Admins</option>
                     <option value="super_admin" <?= $selectedRole === 'super_admin' ? 'selected' : '' ?>>Super Admin</option>
                 </select>
+                <select name="per_page" onchange="this.form.submit()" class="form-control" style="width: auto; padding: 0.375rem 0.5rem; font-size: 0.875rem;">
+                    <option value="10" <?= $perPage === 10 ? 'selected' : '' ?>>10 / page</option>
+                    <option value="15" <?= $perPage === 15 ? 'selected' : '' ?>>15 / page</option>
+                    <option value="25" <?= $perPage === 25 ? 'selected' : '' ?>>25 / page</option>
+                    <option value="50" <?= $perPage === 50 ? 'selected' : '' ?>>50 / page</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
+                <?php if (!empty($search) || $selectedRole !== 'all'): ?>
+                    <a href="?" class="btn btn-sm btn-secondary" title="Clear filters">✕</a>
+                <?php endif; ?>
             </form>
             <button class="btn btn-sm btn-primary" onclick="openModal('createUserModal')">+ Create User Account</button>
         </div>
@@ -122,6 +166,7 @@ unset($u);
             </tbody>
         </table>
     </div>
+    <?= $paginator->render() ?>
 </div>
 
 <!-- Create User Modal -->
@@ -169,7 +214,21 @@ unset($u);
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password *</label>
-                    <input type="password" name="password" class="form-control" placeholder="Initial password" required>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="password" id="newUserPassword" name="password" class="form-control" placeholder="Initial password" required style="width: 100%; padding-right: 2.5rem;">
+                        <button type="button" onclick="toggleAdminPassVisibility('newUserPassword', this)" aria-label="Toggle password visibility" title="Show password" style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: #64748b; padding: 0.25rem; display: flex; align-items: center; justify-content: center; outline: none;">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg class="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                                <line x1="2" x2="22" y1="2" y2="22"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -282,7 +341,21 @@ unset($u);
 
             <div class="form-group" style="margin-top: 0.75rem;">
                 <label class="form-label">Reset Password (Optional)</label>
-                <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current password">
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="password" id="editUserPassword" name="password" class="form-control" placeholder="Leave blank to keep current password" style="width: 100%; padding-right: 2.5rem;">
+                    <button type="button" onclick="toggleAdminPassVisibility('editUserPassword', this)" aria-label="Toggle password visibility" title="Show password" style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: #64748b; padding: 0.25rem; display: flex; align-items: center; justify-content: center; outline: none;">
+                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                            <line x1="2" x2="22" y1="2" y2="22"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.25rem;">
@@ -294,6 +367,22 @@ unset($u);
 </div>
 
 <script>
+function toggleAdminPassVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isPassword = input.getAttribute('type') === 'password';
+    input.setAttribute('type', isPassword ? 'text' : 'password');
+    const eyeIcon = btn.querySelector('.eye-icon');
+    const eyeOffIcon = btn.querySelector('.eye-off-icon');
+    if (eyeIcon && eyeOffIcon) {
+        eyeIcon.style.display = isPassword ? 'none' : 'inline-block';
+        eyeOffIcon.style.display = isPassword ? 'inline-block' : 'none';
+    }
+    const labelText = isPassword ? 'Hide password' : 'Show password';
+    btn.setAttribute('title', labelText);
+    btn.setAttribute('aria-label', labelText);
+    btn.style.color = isPassword ? '#0d9488' : '#64748b';
+}
 function openEditUserModal(userId, firstName, lastName, email, phone, nationalId, regNumber, isActive, roles) {
     document.getElementById('editUserNameDisplay').innerText = firstName + ' ' + lastName;
     document.getElementById('editUserIdInput').value = userId;

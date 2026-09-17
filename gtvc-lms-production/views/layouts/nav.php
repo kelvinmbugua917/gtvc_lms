@@ -2,6 +2,7 @@
 $user = $currentUser ?? [];
 $roles = array_map(fn($r) => is_array($r) ? ($r['name'] ?? '') : (string)$r, $user['roles'] ?? []);
 $primaryRole = $roles[0] ?? 'student';
+$isStaffOrAdmin = in_array('admin', $roles, true) || in_array('super_admin', $roles, true) || in_array('registrar', $roles, true) || in_array('it_admin', $roles, true) || in_array('hod', $roles, true) || in_array('lecturer', $roles, true) || in_array('trainer', $roles, true) || in_array('accountant', $roles, true) || in_array('bursar', $roles, true);
 
 $rawPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $baseUrl = \App\Core\View::baseUrl();
@@ -32,7 +33,7 @@ $currentPath = '/' . trim($currentPath, '/');
         <span>📊</span> Dashboard
     </a>
 
-    <?php if (in_array('student', $roles, true) && !in_array('admin', $roles, true)): ?>
+    <?php if (in_array('student', $roles, true) && !$isStaffOrAdmin): ?>
         <a href="<?= \App\Core\View::url('/student/courses') ?>" class="nav-link <?= str_starts_with($currentPath, '/student/courses') ? 'active' : '' ?>">
             <span>📚</span> My Courses
         </a>
@@ -104,17 +105,23 @@ $currentPath = '/' . trim($currentPath, '/');
         </a>
     <?php endif; ?>
 
-    <?php if (in_array('admin', $roles, true) || in_array('super_admin', $roles, true)): ?>
-        <div class="nav-section-title" style="margin-top: 1rem;">System Administration</div>
+    <?php if (in_array('admin', $roles, true) || in_array('super_admin', $roles, true) || in_array('registrar', $roles, true) || in_array('it_admin', $roles, true)): 
+        $isPureRegistrar = in_array('registrar', $roles, true) && !in_array('admin', $roles, true) && !in_array('super_admin', $roles, true);
+    ?>
+        <div class="nav-section-title" style="margin-top: 1rem;">
+            <?= $isPureRegistrar ? 'Academic Registry' : 'System Administration' ?>
+        </div>
         <a href="<?= \App\Core\View::url('/admin/users') ?>" class="nav-link <?= str_starts_with($currentPath, '/admin/users') ? 'active' : '' ?>">
-            <span>👥</span> Users & Roles
+            <span>👥</span> <?= $isPureRegistrar ? 'Student & User Registry' : 'Users & Roles' ?>
         </a>
         <a href="<?= \App\Core\View::url('/admin/academic') ?>" class="nav-link <?= str_starts_with($currentPath, '/admin/academic') ? 'active' : '' ?>">
             <span>🏛️</span> Academic Hierarchy
         </a>
+        <?php if (!$isPureRegistrar): ?>
         <a href="<?= \App\Core\View::url('/admin/settings') ?>" class="nav-link <?= str_starts_with($currentPath, '/admin/settings') ? 'active' : '' ?>">
             <span>⚙️</span> System Settings
         </a>
+        <?php endif; ?>
         <a href="<?= \App\Core\View::url('/admin/audit-logs') ?>" class="nav-link <?= str_starts_with($currentPath, '/admin/audit-logs') ? 'active' : '' ?>">
             <span>📜</span> Security Audit Logs
         </a>

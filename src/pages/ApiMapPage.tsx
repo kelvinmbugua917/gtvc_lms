@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldCheck, Activity, Key, LogOut, UserCheck, Lock, CheckCircle2, XCircle } from "lucide-react";
+import { ShieldCheck, Activity, Key, LogOut, UserCheck, Lock, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
 import { useLms } from "../context/LmsContext";
 
@@ -22,6 +22,7 @@ export default function ApiMapPage() {
 
   const [emailInput, setEmailInput] = useState("admin@gilgiltvc.ac.ke");
   const [passwordInput, setPasswordInput] = useState("password");
+  const [showAuthPassword, setShowAuthPassword] = useState(false);
   const [lastApiResponse, setLastApiResponse] = useState<any>(null);
 
   const handlePresetSelect = (presetEmail: string) => {
@@ -190,14 +191,25 @@ export default function ApiMapPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
-                <input
-                  type="password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
-                  placeholder="••••••••"
-                  required
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showAuthPassword ? "text" : "password"}
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-3 pr-9 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAuthPassword(!showAuthPassword)}
+                    className="absolute right-2.5 text-slate-400 hover:text-slate-200 focus:outline-none"
+                    title={showAuthPassword ? "Hide password" : "Show password"}
+                    aria-label={showAuthPassword ? "Hide password" : "Show password"}
+                  >
+                    {showAuthPassword ? <EyeOff className="w-3.5 h-3.5 text-teal-400" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
 
               {authError && (

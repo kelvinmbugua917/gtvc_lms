@@ -1,7 +1,25 @@
 <div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Approved Program Fee Structures</h3>
-        <button class="btn btn-sm btn-primary" onclick="openModal('feeStructureModal')">+ Create Fee Structure</button>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h3 class="card-title" style="margin: 0;">Approved Program Fee Structures</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0.25rem 0 0 0;">Manage academic tuition breakdown and mandatory semester term fees.</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <form method="GET" action="" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; flex-wrap: wrap;">
+                <input type="text" name="search" value="<?= \App\Core\View::e($search ?? '') ?>" placeholder="Search program, code..." class="form-control" style="width: 200px; padding: 0.375rem 0.75rem; font-size: 0.875rem;">
+                <select name="per_page" onchange="this.form.submit()" class="form-control" style="width: auto; padding: 0.375rem 0.5rem; font-size: 0.875rem;">
+                    <option value="10" <?= ($perPage ?? 15) === 10 ? 'selected' : '' ?>>10 / page</option>
+                    <option value="15" <?= ($perPage ?? 15) === 15 ? 'selected' : '' ?>>15 / page</option>
+                    <option value="25" <?= ($perPage ?? 15) === 25 ? 'selected' : '' ?>>25 / page</option>
+                    <option value="50" <?= ($perPage ?? 15) === 50 ? 'selected' : '' ?>>50 / page</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
+                <?php if (!empty($search)): ?>
+                    <a href="?" class="btn btn-sm btn-secondary" title="Clear filters">✕</a>
+                <?php endif; ?>
+            </form>
+            <button class="btn btn-sm btn-primary" onclick="openModal('feeStructureModal')">+ Create Fee Structure</button>
+        </div>
     </div>
 
     <div class="table-responsive">
@@ -10,22 +28,41 @@
                 <tr>
                     <th>Program Title</th>
                     <th>Academic Year</th>
-                    <th>Term</th>
+                    <th>Term / Intake</th>
                     <th>Total Fee (KES)</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Diploma in Information Communication Technology (DICT)</td>
-                    <td>2025/2026</td>
-                    <td>Term 2</td>
-                    <td><strong>KES 22,500.00</strong></td>
-                    <td><button class="btn btn-sm btn-secondary" onclick="openModal('feeStructureModal')">Edit Items</button></td>
-                </tr>
+                <?php if (!empty($feeStructures)): ?>
+                    <?php foreach ($feeStructures as $fs): ?>
+                        <tr>
+                            <td>
+                                <strong><?= \App\Core\View::e($fs['program_name'] ?? 'N/A') ?></strong>
+                                <div style="font-size: 0.8rem; color: #64748b;"><?= \App\Core\View::e($fs['program_code'] ?? '') ?></div>
+                            </td>
+                            <td><?= \App\Core\View::e($fs['academic_year_name'] ?? '2025/2026') ?></td>
+                            <td>
+                                <?= \App\Core\View::e($fs['term_semester'] ?? 'Term 1') ?>
+                                <?php if (!empty($fs['intake_name'])): ?>
+                                    <span style="font-size: 0.8rem; color: #64748b;">(<?= \App\Core\View::e($fs['intake_name']) ?>)</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><strong>KES <?= number_format((float)$fs['total_amount'], 2) ?></strong></td>
+                            <td><button class="btn btn-sm btn-secondary" onclick="openModal('feeStructureModal')">Edit Items</button></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">
+                            No fee structures found. Click "+ Create Fee Structure" to define one.
+                        </td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
+    <?= isset($paginator) ? $paginator->render() : '' ?>
 </div>
 
 <!-- Fee Structure Modal -->

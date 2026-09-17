@@ -16,7 +16,7 @@ class Invoice extends Model
         return $prefix . $random;
     }
 
-    public static function getAll(array $filters = []): array
+    public static function getAll(array $filters = [], int $limit = 0, int $offset = 0): array
     {
         $db = self::getDb();
         $sql = "
@@ -55,9 +55,45 @@ class Invoice extends Model
 
         $sql .= " ORDER BY i.created_at DESC";
 
+        if ($limit > 0) {
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
+
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function count(array $filters = []): int
+    {
+        $db = self::getDb();
+        $sql = "
+            SELECT COUNT(*)
+            FROM `invoices` i
+            JOIN `student_profiles` sp ON i.student_id = sp.id
+            JOIN `users` u ON sp.user_id = u.id
+            WHERE 1=1
+        ";
+        $params = [];
+
+        if (!empty($filters['student_id'])) {
+            $sql .= " AND i.student_id = :student_id";
+            $params['student_id'] = (int)$filters['student_id'];
+        }
+
+        if (!empty($filters['status'])) {
+            $sql .= " AND i.status = :status";
+            $params['status'] = $filters['status'];
+        }
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (i.invoice_number LIKE :search OR sp.index_number LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
     }
 
     public static function getById(int $id): ?array

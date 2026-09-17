@@ -8,7 +8,7 @@ use App\Core\Model;
 
 class Student extends Model
 {
-    public static function getAllStudents(?int $departmentId = null, ?string $search = null): array
+    public static function getAllStudents(?int $departmentId = null, ?string $search = null, int $limit = 0, int $offset = 0): array
     {
         $sql = "SELECT sp.id AS student_profile_id, sp.user_id, sp.index_number, sp.gender, sp.date_of_birth,
                        sp.address, sp.guardian_name, sp.guardian_phone, sp.cbet_reg_no, sp.created_at AS profile_created_at,
@@ -45,7 +45,43 @@ class Student extends Model
         }
 
         $sql .= " ORDER BY u.last_name ASC, u.first_name ASC";
+
+        if ($limit > 0) {
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
+
         return self::fetchAll($sql, $params);
+    }
+
+    public static function countStudents(?int $departmentId = null, ?string $search = null): int
+    {
+        $sql = "SELECT COUNT(*)
+                FROM student_profiles sp
+                JOIN users u ON u.id = sp.user_id
+                LEFT JOIN student_enrollments se ON se.student_id = sp.id AND se.status = 'active'
+                LEFT JOIN programs p ON p.id = se.program_id";
+
+        $conditions = [];
+        $params = [];
+
+        if ($departmentId !== null) {
+            $conditions[] = "p.department_id = :department_id";
+            $params['department_id'] = $departmentId;
+        }
+
+        if ($search !== null && trim($search) !== '') {
+            $conditions[] = "(u.first_name LIKE :search OR u.last_name LIKE :search OR u.email LIKE :search OR u.registration_number LIKE :search OR sp.index_number LIKE :search)";
+            $params['search'] = '%' . trim($search) . '%';
+        }
+
+        if (!empty($conditions)) {
+            $sql .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $db = self::getDb();
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
     }
 
     public static function getStudentById(int $id): ?array

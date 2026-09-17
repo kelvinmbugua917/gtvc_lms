@@ -3,6 +3,7 @@ use App\Models\Department;
 use App\Models\ClassCohort;
 use App\Models\AcademicYear;
 use App\Core\Model;
+use App\Core\Paginator;
 
 $departments = Department::getAllDepartments();
 $programs = Department::getAllPrograms();
@@ -10,6 +11,19 @@ $classes = ClassCohort::getAllClasses();
 $intakes = AcademicYear::getAllIntakes();
 
 $db = Model::getDb();
+
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = max(5, min(100, (int)($_GET['per_page'] ?? 10)));
+$activeTab = $_GET['tab'] ?? 'departments';
+
+$deptPaginator = new Paginator(count($departments), $perPage, $activeTab === 'departments' ? $page : 1);
+$paginatedDepartments = $deptPaginator->slice($departments);
+
+$progPaginator = new Paginator(count($programs), $perPage, $activeTab === 'programs' ? $page : 1);
+$paginatedPrograms = $progPaginator->slice($programs);
+
+$classPaginator = new Paginator(count($classes), $perPage, $activeTab === 'classes' ? $page : 1);
+$paginatedClasses = $classPaginator->slice($classes);
 
 // Fetch program counts per department
 $programCounts = [];
@@ -38,8 +52,6 @@ try {
         $hodCandidates = $hodStmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 } catch (\Throwable $e) {}
-
-$activeTab = $_GET['tab'] ?? 'departments';
 ?>
 
 <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">
@@ -83,7 +95,7 @@ $activeTab = $_GET['tab'] ?? 'departments';
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($departments as $dept): ?>
+                    <?php foreach ($paginatedDepartments as $dept): ?>
                         <?php
                             $hodName = (!empty($dept['hod_first_name']) || !empty($dept['hod_last_name']))
                                 ? trim($dept['hod_first_name'] . ' ' . $dept['hod_last_name'])
@@ -106,6 +118,7 @@ $activeTab = $_GET['tab'] ?? 'departments';
             </tbody>
         </table>
     </div>
+    <?= $deptPaginator->render() ?>
 </div>
 <?php endif; ?>
 
@@ -139,7 +152,7 @@ $activeTab = $_GET['tab'] ?? 'departments';
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($programs as $prog): ?>
+                    <?php foreach ($paginatedPrograms as $prog): ?>
                         <tr>
                             <td><strong><?= \App\Core\View::e($prog['code']) ?></strong></td>
                             <td><?= \App\Core\View::e($prog['name']) ?></td>
@@ -157,6 +170,7 @@ $activeTab = $_GET['tab'] ?? 'departments';
             </tbody>
         </table>
     </div>
+    <?= $progPaginator->render() ?>
 </div>
 <?php endif; ?>
 
@@ -191,7 +205,7 @@ $activeTab = $_GET['tab'] ?? 'departments';
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($classes as $c): ?>
+                    <?php foreach ($paginatedClasses as $c): ?>
                         <tr>
                             <td><strong><?= \App\Core\View::e($c['code']) ?></strong></td>
                             <td><?= \App\Core\View::e($c['name']) ?></td>
@@ -214,6 +228,7 @@ $activeTab = $_GET['tab'] ?? 'departments';
             </tbody>
         </table>
     </div>
+    <?= $classPaginator->render() ?>
 </div>
 <?php endif; ?>
 

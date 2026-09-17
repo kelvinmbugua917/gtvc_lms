@@ -1,5 +1,53 @@
 <?php
-$logs = \App\Models\AuditLog::getRecentLogs(100);
+use App\Core\Paginator;
+use App\Core\Model;
+
+$db = Model::getDb();
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = max(5, min(100, (int)($_GET['per_page'] ?? 20)));
+$search = trim($_GET['search'] ?? '');
+$selectedAction = trim($_GET['action'] ?? '');
+
+$whereClauses = ["1=1"];
+$params = [];
+if (!empty($selectedAction)) {
+    $whereClauses[] = "al.action = :action";
+    $params['action'] = $selectedAction;
+}
+if (!empty($search)) {
+    $whereClauses[] = "(al.action LIKE :search OR u.email LIKE :search OR u.first_name LIKE :search OR u.last_name LIKE :search OR al.ip_address LIKE :search)";
+    $params['search'] = '%' . $search . '%';
+}
+$whereSql = implode(' AND ', $whereClauses);
+
+$countSql = "
+    SELECT COUNT(*)
+    FROM `audit_logs` al
+    LEFT JOIN `users` u ON al.user_id = u.id
+    WHERE {$whereSql}
+";
+$cStmt = $db->prepare($countSql);
+$cStmt->execute($params);
+$totalLogs = (int)$cStmt->fetchColumn();
+
+$paginator = new Paginator($totalLogs, $perPage, $page);
+
+$sql = "
+    SELECT al.*, u.email, u.first_name, u.last_name
+    FROM `audit_logs` al
+    LEFT JOIN `users` u ON al.user_id = u.id
+    WHERE {$whereSql}
+    ORDER BY al.created_at DESC
+    LIMIT :limit OFFSET :offset
+";
+$stmt = $db->prepare($sql);
+foreach ($params as $k => $v) {
+    $stmt->bindValue(':' . $k, $v);
+}
+$stmt->bindValue(':limit', $paginator->getLimit(), \PDO::PARAM_INT);
+$stmt->bindValue(':offset', $paginator->getOffset(), \PDO::PARAM_INT);
+$stmt->execute();
+$logs = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 ?>
 <div class="card">
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
@@ -7,7 +55,22 @@ $logs = \App\Models\AuditLog::getRecentLogs(100);
             <h3 class="card-title" style="margin: 0;">Security Audit Logs & Trace Records</h3>
             <p style="font-size: 0.85rem; color: #64748b; margin: 0.25rem 0 0 0;">Real-time system authentication and security action event trail.</p>
         </div>
-        <button class="btn btn-sm btn-secondary" onclick="window.location.reload()">🔄 Refresh Logs</button>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <form method="GET" action="" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; flex-wrap: wrap;">
+                <input type="text" name="search" value="<?= \App\Core\View::e($search) ?>" placeholder="Search action, email, IP..." class="form-control" style="width: 200px; padding: 0.375rem 0.75rem; font-size: 0.875rem;">
+                <select name="per_page" onchange="this.form.submit()" class="form-control" style="width: auto; padding: 0.375rem 0.5rem; font-size: 0.875rem;">
+                    <option value="15" <?= $perPage === 15 ? 'selected' : '' ?>>15 / page</option>
+                    <option value="20" <?= $perPage === 20 ? 'selected' : '' ?>>20 / page</option>
+                    <option value="50" <?= $perPage === 50 ? 'selected' : '' ?>>50 / page</option>
+                    <option value="100" <?= $perPage === 100 ? 'selected' : '' ?>>100 / page</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
+                <?php if (!empty($search) || !empty($selectedAction)): ?>
+                    <a href="?" class="btn btn-sm btn-secondary" title="Clear filters">✕</a>
+                <?php endif; ?>
+            </form>
+            <button class="btn btn-sm btn-secondary" onclick="window.location.reload()">🔄 Refresh Logs</button>
+        </div>
     </div>
 
     <div class="table-responsive">
@@ -66,4 +129,5 @@ $logs = \App\Models\AuditLog::getRecentLogs(100);
             </tbody>
         </table>
     </div>
+    <?= $paginator->render() ?>
 </div>

@@ -51,6 +51,7 @@ $router->get('/dashboard', [App\Controllers\ViewController::class, 'dashboard'])
 $router->get('/student/courses', [App\Controllers\ViewController::class, 'studentCourses']);
 $router->get('/student/materials', [App\Controllers\ViewController::class, 'studentMaterials']);
 $router->get('/student/assignments', [App\Controllers\ViewController::class, 'studentAssignments']);
+$router->post('/student/assignments/submit', [App\Controllers\AssignmentController::class, 'submitAssignment']);
 $router->get('/student/quizzes', [App\Controllers\ViewController::class, 'studentQuizzes']);
 $router->get('/student/grades', [App\Controllers\ViewController::class, 'studentGrades']);
 $router->get('/student/attendance', [App\Controllers\ViewController::class, 'studentAttendance']);

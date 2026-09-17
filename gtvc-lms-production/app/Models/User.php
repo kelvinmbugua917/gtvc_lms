@@ -190,6 +190,32 @@ class User extends Model
                 }
             }
 
+            // Ensure default permissions exist for registrar and other roles
+            $rolePermDefaults = [
+                'registrar'   => [2, 3, 7], // user.manage, academic.manage, attendance.mark
+                'it_admin'    => [1, 2],    // system.manage, user.manage
+                'admin'       => [2, 3, 7],
+                'hod'         => [4, 5, 7],
+                'lecturer'    => [4, 5, 7],
+                'trainer'     => [4, 5, 7],
+                'accountant'  => [6],
+                'bursar'      => [6],
+            ];
+
+            foreach ($rolePermDefaults as $roleName => $permIds) {
+                if (!empty($existingMap[$roleName])) {
+                    $rId = $existingMap[$roleName];
+                    foreach ($permIds as $pId) {
+                        $checkStmt = $db->prepare("SELECT 1 FROM `role_permissions` WHERE `role_id` = :rid AND `permission_id` = :pid LIMIT 1");
+                        $checkStmt->execute(['rid' => $rId, 'pid' => $pId]);
+                        if (!$checkStmt->fetch()) {
+                            $insRp = $db->prepare("INSERT IGNORE INTO `role_permissions` (`role_id`, `permission_id`) VALUES (:rid, :pid)");
+                            $insRp->execute(['rid' => $rId, 'pid' => $pId]);
+                        }
+                    }
+                }
+            }
+
             return $existingMap;
         } catch (\Throwable $e) {
             return [];

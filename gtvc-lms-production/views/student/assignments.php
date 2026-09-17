@@ -95,6 +95,7 @@ $flashError = \App\Core\Session::getFlash('error');
             </tbody>
         </table>
     </div>
+    <?= isset($paginator) ? $paginator->render() : '' ?>
 </div>
 
 <!-- Modal for Assignment Submission -->
@@ -105,24 +106,25 @@ $flashError = \App\Core\Session::getFlash('error');
             <button type="button" class="btn btn-sm btn-secondary" onclick="closeModal('submitModal')">✕</button>
         </div>
 
-        <form action="<?= \App\Core\View::url('/api/v1/assignments/submissions') ?>" method="POST" enctype="multipart/form-data" style="padding: 1.25rem;">
+        <form id="assignmentSubmitForm" action="<?= \App\Core\View::url('/student/assignments/submit') ?>" method="POST" enctype="multipart/form-data" style="padding: 1.25rem;">
             <input type="hidden" name="csrf_token" value="<?= \App\Core\View::e($csrfToken) ?>">
             <input type="hidden" name="assignment_id" id="modal_assignment_id" value="1">
             <input type="hidden" name="redirect" value="/student/assignments">
 
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 0.35rem;">Submission Notes / Comments</label>
-                <textarea name="comments" class="form-control" rows="3" placeholder="Add technical comments or explanation for your lecturer..." style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"></textarea>
+                <textarea name="comments" id="modal_comments" class="form-control" rows="3" placeholder="Add technical comments or explanation for your lecturer..." style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"></textarea>
             </div>
 
             <div class="form-group" style="margin-bottom: 1.25rem;">
                 <label class="form-label" style="font-weight: 600; display: block; margin-bottom: 0.35rem;">Upload Solution File (PDF, DOCX, ZIP, PNG, JPG)</label>
-                <input type="file" name="submission_file" class="form-control" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                <input type="file" name="submission_file" id="modal_file" class="form-control" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                <small style="color: #6b7280; font-size: 0.75rem; display: block; margin-top: 0.25rem;">Maximum size: 25MB. PDF, Word documents, code archives, or diagrams.</small>
             </div>
 
             <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('submitModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary" style="background-color: #2563eb; color: #ffffff; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer;">Submit Solution</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary" style="background-color: #0d9488; color: #ffffff; border: none; padding: 0.5rem 1.25rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600;">Submit Solution</button>
             </div>
         </form>
     </div>
@@ -130,8 +132,8 @@ $flashError = \App\Core\Session::getFlash('error');
 
 <script>
 function openSubmitModal(assignmentId, title) {
-    document.getElementById('modal_assignment_id').value = assignmentId;
-    document.getElementById('submitModalTitle').innerText = 'Submit Solution: ' + title;
+    document.getElementById('modal_assignment_id').value = assignmentId || 1;
+    document.getElementById('submitModalTitle').innerText = 'Submit Solution: ' + (title || 'Assignment');
     const modal = document.getElementById('submitModal');
     modal.style.display = 'flex';
 }
@@ -140,4 +142,12 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) modal.style.display = 'none';
 }
+
+document.getElementById('assignmentSubmitForm')?.addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Submitting...';
+    }
+});
 </script>

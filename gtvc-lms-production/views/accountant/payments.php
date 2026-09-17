@@ -11,8 +11,30 @@
 <?php endif; ?>
 
 <div class="card">
-    <div class="card-header">
-        <h3 class="card-title">M-Pesa & Bank Receipts Verification Desk</h3>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h3 class="card-title" style="margin: 0;">M-Pesa & Bank Receipts Verification Desk</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0.25rem 0 0 0;">Review student payment submissions and verify bank/M-Pesa transaction references.</p>
+        </div>
+        <form method="GET" action="" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; flex-wrap: wrap;">
+            <input type="text" name="search" value="<?= \App\Core\View::e($search ?? '') ?>" placeholder="Search ref, student, adm no..." class="form-control" style="width: 210px; padding: 0.375rem 0.75rem; font-size: 0.875rem;">
+            <select name="status" onchange="this.form.submit()" class="form-control" style="width: auto; padding: 0.375rem 0.5rem; font-size: 0.875rem;">
+                <option value="all" <?= empty($status) || $status === 'all' ? 'selected' : '' ?>>All Statuses</option>
+                <option value="pending" <?= ($status ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
+                <option value="verified" <?= ($status ?? '') === 'verified' ? 'selected' : '' ?>>Verified</option>
+                <option value="rejected" <?= ($status ?? '') === 'rejected' ? 'selected' : '' ?>>Rejected</option>
+            </select>
+            <select name="per_page" onchange="this.form.submit()" class="form-control" style="width: auto; padding: 0.375rem 0.5rem; font-size: 0.875rem;">
+                <option value="10" <?= ($perPage ?? 15) === 10 ? 'selected' : '' ?>>10 / page</option>
+                <option value="15" <?= ($perPage ?? 15) === 15 ? 'selected' : '' ?>>15 / page</option>
+                <option value="25" <?= ($perPage ?? 15) === 25 ? 'selected' : '' ?>>25 / page</option>
+                <option value="50" <?= ($perPage ?? 15) === 50 ? 'selected' : '' ?>>50 / page</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
+            <?php if (!empty($search) || (!empty($status) && $status !== 'all')): ?>
+                <a href="?" class="btn btn-sm btn-secondary" title="Clear filters">✕</a>
+            <?php endif; ?>
+        </form>
     </div>
 
     <div class="table-responsive">
@@ -73,6 +95,7 @@
             </tbody>
         </table>
     </div>
+    <?= isset($paginator) ? $paginator->render() : '' ?>
 </div>
 
 <!-- Verify Payment Modal -->

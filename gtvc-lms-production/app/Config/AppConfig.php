@@ -61,4 +61,13 @@ class AppConfig
         }
         return $value;
     }
+
+    /**
+     * Check if running in production environment
+     */
+    public static function isProduction(): bool
+    {
+        $env = strtolower((string)(self::env('APP_ENV', 'production') ?: 'production'));
+        return in_array($env, ['production', 'prod', 'live'], true);
+    }
 }

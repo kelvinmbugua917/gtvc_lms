@@ -1,3 +1,7 @@
+<?php
+$isProduction = \App\Config\AppConfig::isProduction();
+$showDemoAccounts = !$isProduction && filter_var(\App\Config\AppConfig::env('SHOW_DEMO_ACCOUNTS', true), FILTER_VALIDATE_BOOLEAN);
+?>
 <div class="card" style="padding: 2rem; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); background: #ffffff;">
     <div style="text-align: center; margin-bottom: 1.5rem;">
         <div style="width: 54px; height: 54px; background: #0d9488; color: #fff; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.75rem; margin-bottom: 0.75rem; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);">G</div>
@@ -20,7 +24,23 @@
 
         <div class="form-group" style="margin-bottom: 1rem;">
             <label class="form-label" for="password" style="font-weight: 600; font-size: 0.85rem; color: #334155; display: block; margin-bottom: 0.35rem;">Password</label>
-            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••••••" required style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
+            <div style="position: relative; display: flex; align-items: center;">
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••••••" required style="width: 100%; padding: 0.65rem 2.75rem 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
+                <button type="button" id="togglePasswordBtn" aria-label="Show password" title="Show password" style="position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: #64748b; padding: 0.25rem; display: flex; align-items: center; justify-content: center; outline: none;">
+                    <!-- Eye Icon (Password hidden, click to show) -->
+                    <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <!-- Eye Off Icon (Password visible, click to hide) -->
+                    <svg id="eyeOffIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                        <line x1="2" x2="22" y1="2" y2="22"/>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; font-size: 0.8125rem;">
@@ -35,7 +55,8 @@
         </button>
     </form>
 
-    <!-- Quick Demo Credential Selector -->
+    <?php if ($showDemoAccounts): ?>
+    <!-- Quick Demo Credential Selector (Non-production environments only) -->
     <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed #cbd5e1;">
         <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; text-align: center;">
             Demo Accounts (Click to Autofill)
@@ -55,6 +76,7 @@
             </button>
         </div>
     </div>
+    <?php endif; ?>
 
     <div style="margin-top: 1.25rem; text-align: center; font-size: 0.75rem; color: #94a3b8;">
         &copy; <?= date('Y') ?> Gilgil Technical and Vocational College.<br>
@@ -69,8 +91,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submitBtn');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const eyeIcon = document.getElementById('eyeIcon');
+    const eyeOffIcon = document.getElementById('eyeOffIcon');
 
-    // Quick demo account filler
+    // Password visibility toggle with eye icon
+    if (togglePasswordBtn && passwordInput) {
+        togglePasswordBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+            if (eyeIcon && eyeOffIcon) {
+                eyeIcon.style.display = isPassword ? 'none' : 'inline-block';
+                eyeOffIcon.style.display = isPassword ? 'inline-block' : 'none';
+            }
+            const labelText = isPassword ? 'Hide password' : 'Show password';
+            togglePasswordBtn.setAttribute('title', labelText);
+            togglePasswordBtn.setAttribute('aria-label', labelText);
+            togglePasswordBtn.style.color = isPassword ? '#0d9488' : '#64748b';
+        });
+    }
+
+    // Quick demo account filler (available only in non-production)
     document.querySelectorAll('.btn-demo').forEach(btn => {
         btn.addEventListener('click', () => {
             emailInput.value = btn.getAttribute('data-email');

@@ -1,35 +1,39 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-    <div class="stat-card">
+    <a href="<?= \App\Core\View::url('/student/courses') ?>" class="stat-card" title="View Enrolled Units & Course Modules" id="stat-enrolled-units">
         <div>
             <div class="stat-label">Enrolled Units</div>
             <div class="stat-value"><?= (int)($enrolledUnits ?? 5) ?></div>
+            <span class="stat-hint" style="font-size: 0.75rem; color: #0d9488; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; margin-top: 0.35rem;">View Units &rarr;</span>
         </div>
         <div class="stat-icon" style="background: #ccfbf1; color: #0f766e;">📚</div>
-    </div>
+    </a>
 
-    <div class="stat-card">
+    <a href="<?= \App\Core\View::url('/student/assignments') ?>" class="stat-card" title="View Pending Assignments & Assessments" id="stat-pending-assignments">
         <div>
             <div class="stat-label">Pending Assignments</div>
             <div class="stat-value"><?= (int)($pendingAssignments ?? 2) ?></div>
+            <span class="stat-hint" style="font-size: 0.75rem; color: #d97706; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; margin-top: 0.35rem;">View Tasks &rarr;</span>
         </div>
         <div class="stat-icon" style="background: #fef3c7; color: #b45309;">📝</div>
-    </div>
+    </a>
 
-    <div class="stat-card">
+    <a href="<?= \App\Core\View::url('/student/attendance') ?>" class="stat-card" title="View Attendance Log & Workshop Sessions" id="stat-attendance-rate">
         <div>
             <div class="stat-label">Attendance Rate</div>
             <div class="stat-value"><?= \App\Core\View::e($attendanceRate ?? '92%') ?></div>
+            <span class="stat-hint" style="font-size: 0.75rem; color: #059669; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; margin-top: 0.35rem;">View Log &rarr;</span>
         </div>
         <div class="stat-icon" style="background: #d1fae5; color: #047857;">⏱️</div>
-    </div>
+    </a>
 
-    <div class="stat-card">
+    <a href="<?= \App\Core\View::url('/student/fees') ?>" class="stat-card" title="View Fee Clearance & Exam Eligibility" id="stat-exam-clearance">
         <div>
             <div class="stat-label">Exam Clearance</div>
             <div class="stat-value" style="font-size: 1.125rem; color: #047857; text-transform: uppercase;"><?= \App\Core\View::e($clearanceStatus ?? 'CLEARED') ?></div>
+            <span class="stat-hint" style="font-size: 0.75rem; color: #0284c7; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; margin-top: 0.35rem;">View Clearance &rarr;</span>
         </div>
         <div class="stat-icon" style="background: #e0f2fe; color: #0369a1;">🛡️</div>
-    </div>
+    </a>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3" style="margin-top: 1.5rem;">
